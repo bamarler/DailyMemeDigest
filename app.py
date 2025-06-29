@@ -5,6 +5,7 @@
 
 from flask import Flask, render_template, request, jsonify
 import os
+import json
 from src.config import Config
 from src.database import Database
 
@@ -12,6 +13,7 @@ from src.news_aggregator import get_news_articles
 from src.filter_top_k import get_top_articles
 from src.prompt_generator import generate_meme_prompts
 from src.meme_generator import generate_meme_image
+
 
 def create_app():
     app = Flask(__name__)
