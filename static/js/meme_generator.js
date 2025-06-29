@@ -1,151 +1,169 @@
+// Global variables for tracking generation state
+let lastGenerationTime = 0;
+const COOLDOWN_PERIOD = 10000; // 10 seconds cooldown between generations
+let isGenerating = false;
+
+// Progress steps for generation animation
+const PROGRESS_STEPS = [
+    'Finding trending AI news...',
+    'Analyzing content...',
+    'Crafting meme concept...',
+    'Generating image...',
+    'Adding finishing touches...'
+];
+
 async function generateMeme() {
-    const generateBtn = document.getElementById('generate-btn');
-    const overlay = document.getElementById('generating-overlay');
-    
-    if (!generateBtn || !overlay) {
-        console.error('Required elements not found');
+    // Prevent multiple simultaneous generations
+    if (isGenerating) {
         return;
     }
-    
-    // Disable button and show overlay
-    generateBtn.disabled = true;
-    generateBtn.textContent = '🎲 Generating...';
-    overlay.style.display = 'flex';
-    
-    // Animate steps
-    const steps = ['step-1', 'step-2', 'step-3', 'step-4', 'step-5'];
-    let currentStep = 0;
-    
-    const stepInterval = setInterval(() => {
-        if (currentStep > 0) {
-            const prevStep = document.getElementById(steps[currentStep - 1]);
-            if (prevStep) {
-                prevStep.classList.remove('active');
-                prevStep.classList.add('completed');
-            }
-        }
-        if (currentStep < steps.length) {
-            const currentStepEl = document.getElementById(steps[currentStep]);
-            if (currentStepEl) {
-                currentStepEl.classList.add('active');
-            }
-            currentStep++;
-        } else {
-            clearInterval(stepInterval);
-        }
-    }, 1200);
 
+    // Check cooldown period
+    const now = Date.now();
+    if (now - lastGenerationTime < COOLDOWN_PERIOD) {
+        const remainingTime = Math.ceil((COOLDOWN_PERIOD - (now - lastGenerationTime)) / 1000);
+        showAlert(`Please wait ${remainingTime} seconds before generating another meme`, 'warning');
+        return;
+    }
+
+    const generateBtn = document.getElementById('generate-btn');
+    const overlay = document.getElementById('generating-overlay');
+    const progressText = document.getElementById('progress-text');
+    
     try {
-        console.log('🎲 Starting meme generation...');
-        
+        // Set generation state
+        isGenerating = true;
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Generating...';
+        overlay.classList.remove('hidden');
+
+        // Start progress animation
+        startProgressAnimation(progressText);
+
+        // Make API call to generate meme
         const response = await fetch('/api/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // Add any parameters needed by your backend
+                timestamp: new Date().toISOString()
+            })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
-            showAlert('🎉 Fresh meme generated! Scroll down to see it.', 'success');
-            
-            // Reload page after a short delay to show the new meme
+            showAlert('🎉 Fresh meme generated!', 'success');
+            // Reload page after 2 seconds to show new meme
             setTimeout(() => {
                 window.location.reload();
             }, 2000);
         } else {
-            console.error('Meme generation failed:', data.error);
-            showAlert('😅 Generation failed: ' + (data.error || 'Unknown error'), 'error');
+            showAlert(data.error || 'Failed to generate meme', 'error');
         }
+
     } catch (error) {
         console.error('Generation error:', error);
-        showAlert('🚨 Error generating meme. Please try again.', 'error');
+        showAlert('Failed to generate meme. Please try again.', 'error');
     } finally {
-        // Reset UI after delay
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            generateBtn.disabled = false;
-            generateBtn.textContent = '🎲 Generate AI Meme';
-            
-            // Reset steps
-            steps.forEach(stepId => {
-                const step = document.getElementById(stepId);
-                if (step) {
-                    step.classList.remove('active', 'completed');
-                }
-            });
-        }, 2000);
+        // Reset UI state
+        isGenerating = false;
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Meme';
+        overlay.classList.add('hidden');
+        lastGenerationTime = Date.now();
     }
 }
 
-async function voteMeme(memeId) {
-    if (!memeId) {
-        console.error('No meme ID provided');
-        return;
-    }
+// Progress animation function
+function startProgressAnimation(progressText) {
+    let currentStep = 0;
     
-    if (votedMemes.has(memeId)) {
-        showAlert('You already voted for this meme! 🗳️', 'info');
-        return;
-    }
-
-    try {
-        console.log('🗳️ Voting for meme:', memeId);
-        
-        const response = await fetch('/api/vote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ meme_id: memeId })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Update local storage
-            votedMemes.add(memeId);
-            localStorage.setItem('votedMemes', JSON.stringify([...votedMemes]));
-            
-            // Update button
-            const btn = document.getElementById(`vote-${memeId}`);
-            if (btn) {
-                btn.classList.add('voted');
-                btn.disabled = true;
-                
-                // Update vote count
-                const currentVotes = parseInt(btn.textContent.match(/\d+/)?.[0] || 0);
-                btn.textContent = `👍 ${currentVotes + 1}`;
-            }
-            
-            showAlert('Vote counted! 👍', 'success');
-            updateStats();
-        } else {
-            console.error('Vote failed:', data.message);
-            showAlert(data.message || 'Could not vote', 'error');
+    const updateProgress = () => {
+        if (currentStep < PROGRESS_STEPS.length && isGenerating) {
+            progressText.textContent = PROGRESS_STEPS[currentStep];
+            currentStep++;
+            setTimeout(updateProgress, 1500); // Update every 1.5 seconds
         }
-    } catch (error) {
-        console.error('Voting error:', error);
-        showAlert('Error voting. Please try again.', 'error');
-    }
+    };
+
+    updateProgress();
 }
 
-// Rate limiting for generation
-let lastGenerationTime = 0;
-const GENERATION_COOLDOWN = 10000; // 10 seconds
-
-function canGenerate() {
-    const now = Date.now();
-    if (now - lastGenerationTime < GENERATION_COOLDOWN) {
-        const remaining = Math.ceil((GENERATION_COOLDOWN - (now - lastGenerationTime)) / 1000);
-        showAlert(`Please wait ${remaining} seconds before generating another meme`, 'info');
-        return false;
+// Alert function for user feedback
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alert-container');
+    if (!alertContainer) {
+        // Create alert container if it doesn't exist
+        const container = document.createElement('div');
+        container.id = 'alert-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        `;
+        document.body.appendChild(container);
     }
-    lastGenerationTime = now;
-    return true;
+
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    alert.style.cssText = `
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in;
+    `;
+
+    // Style based on alert type
+    switch(type) {
+        case 'success':
+            alert.style.backgroundColor = '#d4edda';
+            alert.style.color = '#155724';
+            break;
+        case 'error':
+            alert.style.backgroundColor = '#f8d7da';
+            alert.style.color = '#721c24';
+            break;
+        case 'warning':
+            alert.style.backgroundColor = '#fff3cd';
+            alert.style.color = '#856404';
+            break;
+        default:
+            alert.style.backgroundColor = '#d1ecf1';
+            alert.style.color = '#0c5460';
+    }
+
+    alertContainer.appendChild(alert);
+    
+    // Fade in
+    setTimeout(() => {
+        alert.style.opacity = '1';
+    }, 10);
+
+    // Remove alert after 3 seconds
+    setTimeout(() => {
+        alert.style.opacity = '0';
+        setTimeout(() => {
+            alertContainer.removeChild(alert);
+        }, 300);
+    }, 3000);
 }
 
-// Override the original generateMeme function to include rate limiting
-const originalGenerateMeme = generateMeme;
-generateMeme = function() {
-    if (canGenerate()) {
-        return originalGenerateMeme();
+// Event listener for generate button
+document.addEventListener('DOMContentLoaded', () => {
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generateMeme);
     }
+});
+
+// Export functions if needed
+export {
+    generateMeme,
+    showAlert
 };

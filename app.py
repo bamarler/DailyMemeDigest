@@ -13,6 +13,7 @@ from src.models import GeneratedMeme
 from datetime import datetime
 import uuid
 import random
+from src.meme_generator import generate_meme_image
 
 def create_app():
     app = Flask(__name__)
@@ -23,79 +24,70 @@ def create_app():
     news_aggregator = NewsAPIAggregator(Config.NEWS_API_KEY)
     meme_generator = AIMemeGenerator()
     
-    @app.route('/')
-    def index():
-        sort_by = request.args.get('sort', 'recent')
-        memes = db.get_memes(limit=20, sort_by=sort_by)
-        return render_template('index.html', memes=memes, sort_by=sort_by)
+    
 
     @app.route('/api/generate', methods=['POST'])
     def generate_meme():
-        try:
-            print("🎲 Starting meme generation...")
+        
+            # print("🎲 Starting meme generation...")
             
-            # Get recent news
-            news_items = news_aggregator.get_recent_news(hours_back=48, max_articles=10)
+            # # Get recent news
+            # news_items = news_aggregator.get_recent_news(hours_back=48, max_articles=10)
             
-            if not news_items:
-                return jsonify({'error': 'No recent AI news found'})
+            # if not news_items:
+            #     return jsonify({'error': 'No recent AI news found'})
             
-            # Pick random news item
-            news_item = random.choice(news_items)
-            print(f"📰 Selected news: {news_item.title[:50]}...")
+            # # Pick random news item
+            # news_item = random.choice(news_items)
+            # print(f"📰 Selected news: {news_item.title[:50]}...")
             
-            # Generate meme
-            result = meme_generator.create_complete_meme(news_item)
+            # # Generate meme
+            # result = meme_generator.create_complete_meme(news_item)
             
-            if result['success']:
-                # Save to database
-                meme = GeneratedMeme(
-                    id=str(uuid.uuid4()),
-                    template_name=result['template_name'],
-                    meme_text=result['meme_text'],
-                    news_source=result['news_source'],
-                    created_at=datetime.now().isoformat(),
-                    image_data=result['image_data']
-                )
+            # if result['success']:
+            #     # Save to database
+            #     meme = GeneratedMeme(
+            #         id=str(uuid.uuid4()),
+            #         template_name=result['template_name'],
+            #         meme_text=result['meme_text'],
+            #         news_source=result['news_source'],
+            #         created_at=datetime.now().isoformat(),
+            #         image_data=result['image_data']
+            #     )
                 
-                if 'news_title' in result:
-                    meme.news_title = result['news_title']
+            #     if 'news_title' in result:
+            #         meme.news_title = result['news_title']
                 
-                db.save_meme(meme)
+            #     db.save_meme(meme)
                 
-                print("🎉 Meme generated and saved successfully!")
+            #     print("🎉 Meme generated and saved successfully!")
                 
-                return jsonify({
-                    'success': True,
-                    'meme': {
-                        'id': meme.id,
-                        'template_name': meme.template_name,
-                        'text': meme.meme_text,
-                        'news_source': meme.news_source,
-                        'news_title': getattr(meme, 'news_title', ''),
-                        'image_data': meme.image_data
-                    }
-                })
-            else:
-                return jsonify({'error': 'Meme generation failed'})
-                
-        except Exception as e:
-            print(f"❌ Error in meme generation: {e}")
-            return jsonify({'error': str(e)})
+            #     return jsonify({
+            #         'success': True,
+            #         'meme': {
+            #             'id': meme.id,
+            #             'template_name': meme.template_name,
+            #             'text': meme.meme_text,
+            #             'news_source': meme.news_source,
+            #             'news_title': getattr(meme, 'news_title', ''),
+            #             'image_data': meme.image_data
+            #         }
+            #     })
+            # else:
+            #     return jsonify({'error': 'Meme generation failed'})
 
-    @app.route('/api/vote', methods=['POST'])
-    def vote_meme():
-        try:
-            data = request.get_json()
-            meme_id = data.get('meme_id')
-            user_ip = request.remote_addr
-            
-            if db.vote_meme(meme_id, user_ip):
-                return jsonify({'success': True})
-            else:
-                return jsonify({'success': False, 'message': 'Already voted'})
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)})
+
+                
+        # except Exception as e:
+        #     print(f"❌ Error in meme generation: {e}")
+        #     return jsonify({'error': str(e)})
+
+        #memes = generate_meme_image(prompt_url_list=None)
+        pass
+
+
+
+    
 
     @app.route('/api/memes')
     def get_memes():
