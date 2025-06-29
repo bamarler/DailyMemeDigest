@@ -55,4 +55,4 @@ static/images/generated/
 
 # Test Coverage
 .coverage
-htmlcov/
+htmlcov/.env

@@ -1,58 +1,698 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    {% include 'components/header.html' %}
-    {% include 'components/news_ticker.html' %}
-    
-    <div class="controls">
-        <button onclick="generateMeme()" class="btn btn-primary" id="generate-btn">
-            🎲 Generate AI Meme
-        </button>
-        <button onclick="sortMemes('recent')" class="btn btn-secondary {% if sort_by == 'recent' %}active{% endif %}" id="sort-recent">
-            🕒 Recent
-        </button>
-        <button onclick="sortMemes('popular')" class="btn btn-secondary {% if sort_by == 'popular' %}active{% endif %}" id="sort-popular">
-            🔥 Popular
-        </button>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 AI Meme Newsletter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <div class="meme-gallery" id="meme-gallery">
-        {% if memes %}
-            {% for meme in memes %}
-                {% include 'components/meme_card.html' %}
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <div style="font-size: 3rem; margin-bottom: 20px;">🎭</div>
-                <h3>No memes yet!</h3>
-                <p>Be the first to generate an AI meme from today's news.</p>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 50%, #b8a3f2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Landing Page Styles */
+        .landing-page {
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-button:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        .tag {
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .tag .remove:hover {
+            transform: scale(1.2);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .duration-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .duration-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .duration-btn:hover {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .duration-btn.active {
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            color: white;
+            border-color: transparent;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Memes Page Styles */
+        .memes-page {
+            display: none;
+        }
+
+        .memes-header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.1);
+        }
+
+        .memes-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #8b5cf6;
+            border: 2px solid #8b5cf6;
+            backdrop-filter: blur(10px);
+            padding: 12px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .memes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .meme-card {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+        }
+
+        .meme-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.25);
+        }
+
+        .meme-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+        }
+
+        .loading-content {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header h1 { font-size: 2.5rem; }
+            .memes-grid { grid-template-columns: 1fr; }
+            .form-container { padding: 25px; }
+            .duration-buttons { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Landing Page -->
+        <div class="landing-page" id="landingPage">
+            <div class="header">
+                <h1>🎭 AI Meme Newsletter</h1>
+                <p>Turn the latest AI trends into viral memes using cutting-edge AI technology</p>
             </div>
-        {% endif %}
-    </div>
-</div>
 
-<!-- Generating overlay -->
-<div class="generating-overlay" id="generating-overlay" style="display: none;">
-    <div class="generating-content">
-        <div class="spinner"></div>
-        <h3>🤖 AI Meme Chef at Work</h3>
-        <p>Creating fresh memes from breaking AI news...</p>
-        <div class="generating-steps">
-            <div class="step" id="step-1">📰 Fetching latest AI news...</div>
-            <div class="step" id="step-2">🎭 Selecting perfect meme template...</div>
-            <div class="step" id="step-3">✍️ Generating witty text with GPT...</div>
-            <div class="step" id="step-4">🎨 Creating custom image with AI...</div>
-            <div class="step" id="step-5">🚀 Adding finishing touches...</div>
+            <div class="form-container">
+                <div class="form-section">
+                    <h3>🔥 Select AI Trends</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Choose the AI topics you want memes about</p>
+                    
+                    <div class="dropdown-container">
+                        <button class="dropdown-button" onclick="toggleDropdown()">
+                            <span>Select AI Trends...</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div class="dropdown-item" onclick="selectTrend('OpenAI GPT-5')">🤖 OpenAI GPT-5</div>
+                            <div class="dropdown-item" onclick="selectTrend('Google Gemini')">🔍 Google Gemini</div>
+                            <div class="dropdown-item" onclick="selectTrend('Anthropic Claude')">🧠 Anthropic Claude</div>
+                            <div class="dropdown-item" onclick="selectTrend('AI Agents')">🤵 AI Agents</div>
+                            <div class="dropdown-item" onclick="selectTrend('Autonomous AI')">🚗 Autonomous AI</div>
+                            <div class="dropdown-item" onclick="selectTrend('AI Coding Tools')">💻 AI Coding Tools</div>
+                            <div class="dropdown-item" onclick="selectTrend('Multimodal AI')">🎨 Multimodal AI</div>
+                            <div class="dropdown-item" onclick="selectTrend('AI Hardware')">⚡ AI Hardware</div>
+                            <div class="dropdown-item" onclick="selectTrend('AI Safety')">🛡️ AI Safety</div>
+                            <div class="dropdown-item" onclick="selectTrend('AGI Development')">🌟 AGI Development</div>
+                        </div>
+                    </div>
+
+                    <div class="selected-tags" id="selectedTags">
+                        <!-- Selected tags will appear here -->
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>⏰ Time Duration</h3>
+                    <p style="color: #666; margin-bottom: 15px;">How recent should the news be?</p>
+                    
+                    <div class="duration-buttons">
+                        <button class="duration-btn active" data-duration="1" onclick="selectDuration(this, 1)">
+                            📅 Today
+                        </button>
+                        <button class="duration-btn" data-duration="3" onclick="selectDuration(this, 3)">
+                            📅 3 Days
+                        </button>
+                        <button class="duration-btn" data-duration="7" onclick="selectDuration(this, 7)">
+                            📅 1 Week
+                        </button>
+                        <button class="duration-btn" data-duration="30" onclick="selectDuration(this, 30)">
+                            📅 1 Month
+                        </button>
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="generateMemes()" id="generateBtn">
+                    🚀 Generate AI Memes
+                </button>
+            </div>
+        </div>
+
+        <!-- Memes Page -->
+        <div class="memes-page" id="memesPage">
+            <button class="back-btn" onclick="goBack()">← Back to Generator</button>
+            
+            <div class="memes-header">
+                <h2>Your personalized Meme newsletter</h2>
+            </div>
+
+            <div class="memes-grid" id="memesGrid">
+                <!-- Memes will be rendered here -->
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>🤖 AI Meme Chef at Work</h3>
+            <p id="loadingText">Analyzing AI trends and generating memes...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText">0% Complete</p>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let selectedTrends = [];
+        let selectedDuration = 1;
+        let generatedMemes = [];
+
+        // Dropdown functionality
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.dropdown-container');
+            if (!dropdown.contains(event.target)) {
+                document.getElementById('dropdownMenu').classList.remove('active');
+            }
+        });
+
+        // Select trend from dropdown
+        function selectTrend(trend) {
+            if (!selectedTrends.includes(trend)) {
+                selectedTrends.push(trend);
+                updateSelectedTags();
+            }
+            document.getElementById('dropdownMenu').classList.remove('active');
+        }
+
+        // Remove trend
+        function removeTrend(trend) {
+            selectedTrends = selectedTrends.filter(t => t !== trend);
+            updateSelectedTags();
+        }
+
+        // Update selected tags display
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            container.innerHTML = selectedTrends.map(trend => 
+                `<div class="tag">
+                    ${trend}
+                    <span class="remove" onclick="removeTrend('${trend}')">×</span>
+                </div>`
+            ).join('');
+        }
+
+        // Select duration
+        function selectDuration(button, duration) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.duration-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected button
+            button.classList.add('active');
+            selectedDuration = duration;
+        }
+
+        // Generate memes
+        async function generateMemes() {
+            if (selectedTrends.length === 0) {
+                alert('Please select at least one AI trend!');
+                return;
+            }
+
+            // Show loading overlay
+            showLoading();
+            
+            try {
+                // Simulate progress
+                updateProgress(20, 'Fetching latest AI news...');
+                await sleep(1000);
+                
+                updateProgress(40, 'Analyzing news articles...');
+                await sleep(1000);
+                
+                updateProgress(60, 'Generating meme prompts...');
+                await sleep(1000);
+                
+                updateProgress(80, 'Creating AI-powered memes...');
+                
+                // Simulate API call - replace with actual API call
+                const mockMemes = await simulateAPICall();
+                
+                updateProgress(100, 'Memes ready!');
+                await sleep(500);
+                
+                // Store results and switch to memes page
+                generatedMemes = mockMemes;
+                showMemesPage();
+                
+            } catch (error) {
+                console.error('Error generating memes:', error);
+                alert('Failed to generate memes. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Simulate API call (replace with actual implementation)
+        async function simulateAPICall() {
+            // This is where you'd call your actual API
+            // const response = await fetch('/api/generate', {
+            //     method: 'POST',
+            //     headers: {'Content-Type': 'application/json'},
+            //     body: JSON.stringify({
+            //         trends: selectedTrends,
+            //         duration: selectedDuration
+            //     })
+            // });
+            // const data = await response.json();
+            // return data.memes;
+
+            // Mock data for demo
+            await sleep(2000); // Simulate API delay
+            
+            return selectedTrends.map((trend, index) => ({
+                success: true,
+                prompt: `${getRandomMemeTemplate()} about ${trend} revolutionizing AI industry with breakthrough innovations`,
+                url: `https://example.com/ai-news-${index + 1}`,
+                png_base64: generateMockImage(trend),
+                timestamp: new Date().toISOString()
+            }));
+        }
+
+        // Get random meme template
+        function getRandomMemeTemplate() {
+            const templates = [
+                "Drake pointing meme: Drake rejects old technology, enthusiastically points at",
+                "Expanding brain meme: Evolution from basic AI to advanced",
+                "Distracted boyfriend meme: Developers distracted by new",
+                "This is fine meme: Everything is calm while",
+                "Two buttons meme: Difficult choice between traditional methods and"
+            ];
+            return templates[Math.floor(Math.random() * templates.length)];
+        }
+
+        // Generate mock base64 image (replace with actual images)
+        function generateMockImage(trend) {
+            // In real implementation, this would be the actual base64 from your API
+            // For demo, return a simple colored rectangle
+            const canvas = document.createElement('canvas');
+            canvas.width = 400;
+            canvas.height = 400;
+            const ctx = canvas.getContext('2d');
+            
+            // Random gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 400, 400);
+            gradient.addColorStop(0, `hsl(${Math.random() * 360}, 70%, 60%)`);
+            gradient.addColorStop(1, `hsl(${Math.random() * 360}, 70%, 40%)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 400, 400);
+            
+            // Add text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎭 AI MEME', 200, 180);
+            ctx.fillText(trend, 200, 220);
+            
+            return canvas.toDataURL().split(',')[1]; // Return base64 without data:image prefix
+        }
+
+        // Show memes page
+        function showMemesPage() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('memesPage').style.display = 'block';
+            
+            // Render memes
+            renderMemes();
+        }
+
+        // Render memes
+        function renderMemes() {
+            const container = document.getElementById('memesGrid');
+            
+            container.innerHTML = generatedMemes.map((meme, index) => {
+                if (!meme.success) {
+                    return `
+                        <div class="meme-card">
+                            <div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #666; text-align: center;">
+                                <div>
+                                    <h3>❌ Generation Failed</h3>
+                                    <p>${meme.error || 'Unknown error'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="meme-card" onclick="openMemeLink('${meme.url}')">
+                        <img src="data:image/png;base64,${meme.png_base64}" 
+                             alt="AI Generated Meme" 
+                             class="meme-image"
+                             loading="lazy">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Open meme link
+        function openMemeLink(url) {
+            window.open(url, '_blank');
+        }
+
+        // Go back to landing page
+        function goBack() {
+            document.getElementById('memesPage').style.display = 'none';
+            document.getElementById('landingPage').style.display = 'block';
+        }
+
+        // Loading functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            updateProgress(0, 'Ready to generate...');
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = percent + '% Complete';
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        // Utility function
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎭 AI Meme Newsletter initialized');
+        });
+    </script>
+</body>
+</html>
 {% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/meme_generator.js') }}"></script>
-<script src="{{ url_for('static', filename='js/news_display.js') }}"></script>
-{% endblock %}
-
-
-
