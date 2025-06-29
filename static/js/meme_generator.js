@@ -1,72 +1,121 @@
-// Global variables for tracking generation state
-let lastGenerationTime = 0;
-const COOLDOWN_PERIOD = 10000; // 10 seconds cooldown between generations
+// Global variables to manage generation state
 let isGenerating = false;
+let lastGenerationTime = 0;
+const COOLDOWN_PERIOD = 5000; // 5 seconds cooldown between generations
 
-// Progress steps for generation animation
-const PROGRESS_STEPS = [
-    'Finding trending AI news...',
-    'Analyzing content...',
-    'Crafting meme concept...',
-    'Generating image...',
-    'Adding finishing touches...'
-];
+// DOM Elements
+const generateBtn = document.getElementById('generate-btn');
+const overlay = document.getElementById('generating-overlay');
+const progressText = document.getElementById('progress-text');
+const alertContainer = document.getElementById('alert-container');
 
+// Show alert messages
+function showAlert(message, type = 'info') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    
+    alertContainer.appendChild(alert);
+    
+    // Remove alert after 5 seconds
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Display generated memes in the grid
+function displayMemes(memes) {
+    const memesContainer = document.getElementById('memes-container');
+    memesContainer.innerHTML = ''; // Clear existing memes
+    
+    memes.forEach(meme => {
+        const memeCard = document.createElement('div');
+        memeCard.className = 'meme-card';
+        
+        // Create meme card HTML
+        memeCard.innerHTML = `
+            <img src="${meme.image_url}" class="meme-image" alt="Generated Meme">
+            <div class="meme-info">
+                <p class="meme-caption">${meme.caption || ''}</p>
+                ${meme.news_title ? `<p class="news-title">Based on: ${meme.news_title}</p>` : ''}
+            </div>
+        `;
+        
+        // Add click handler for saving/sharing if needed
+        memeCard.addEventListener('click', () => {
+            // Handle meme click - could be used for expanding view, sharing, etc.
+        });
+        
+        memesContainer.appendChild(memeCard);
+    });
+}
+
+// Check if enough time has passed since last generation
+function checkCooldown() {
+    const now = Date.now();
+    const timeElapsed = now - lastGenerationTime;
+    return timeElapsed >= COOLDOWN_PERIOD;
+}
+
+// Update UI to show generation progress
+function updateProgress(message) {
+    if (progressText) {
+        progressText.textContent = message;
+    }
+}
+
+// Main generation function
 async function generateMeme() {
     // Prevent multiple simultaneous generations
     if (isGenerating) {
+        showAlert('Please wait, already generating memes...', 'warning');
         return;
     }
 
     // Check cooldown period
-    const now = Date.now();
-    if (now - lastGenerationTime < COOLDOWN_PERIOD) {
-        const remainingTime = Math.ceil((COOLDOWN_PERIOD - (now - lastGenerationTime)) / 1000);
-        showAlert(`Please wait ${remainingTime} seconds before generating another meme`, 'warning');
+    if (!checkCooldown()) {
+        const remainingTime = Math.ceil((COOLDOWN_PERIOD - (Date.now() - lastGenerationTime)) / 1000);
+        showAlert(`Please wait ${remainingTime} seconds before generating again`, 'warning');
         return;
     }
 
-    const generateBtn = document.getElementById('generate-btn');
-    const overlay = document.getElementById('generating-overlay');
-    const progressText = document.getElementById('progress-text');
-    
     try {
-        // Set generation state
+        // Update UI state
         isGenerating = true;
         generateBtn.disabled = true;
         generateBtn.textContent = 'Generating...';
         overlay.classList.remove('hidden');
+        updateProgress('Gathering latest AI news...');
 
-        // Start progress animation
-        startProgressAnimation(progressText);
-
-        // Make API call to generate meme
+        // Make API call to backend
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                // Add any parameters needed by your backend
-                timestamp: new Date().toISOString()
-            })
+            }
+            // Add any necessary body data here if needed
+            // body: JSON.stringify({ ... })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            showAlert('🎉 Fresh meme generated!', 'success');
-            // Reload page after 2 seconds to show new meme
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
+            // Show success message with generation stats
+            showAlert(
+                `🎉 Successfully generated ${data.successful_count} out of ${data.total_count} memes!`, 
+                'success'
+            );
+            
+            // Display the generated memes
+            displayMemes(data.memes);
         } else {
-            showAlert(data.error || 'Failed to generate meme', 'error');
+            // Handle generation failure
+            showAlert(data.error || 'Failed to generate memes', 'error');
         }
 
     } catch (error) {
-        console.error('Generation error:', error);
-        showAlert('Failed to generate meme. Please try again.', 'error');
+        console.error('Meme generation error:', error);
+        showAlert('Failed to generate memes. Please try again later.', 'error');
     } finally {
         // Reset UI state
         isGenerating = false;
@@ -77,93 +126,28 @@ async function generateMeme() {
     }
 }
 
-// Progress animation function
-function startProgressAnimation(progressText) {
-    let currentStep = 0;
-    
-    const updateProgress = () => {
-        if (currentStep < PROGRESS_STEPS.length && isGenerating) {
-            progressText.textContent = PROGRESS_STEPS[currentStep];
-            currentStep++;
-            setTimeout(updateProgress, 1500); // Update every 1.5 seconds
-        }
-    };
-
-    updateProgress();
-}
-
-// Alert function for user feedback
-function showAlert(message, type = 'info') {
-    const alertContainer = document.getElementById('alert-container');
-    if (!alertContainer) {
-        // Create alert container if it doesn't exist
-        const container = document.createElement('div');
-        container.id = 'alert-container';
-        container.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-        `;
-        document.body.appendChild(container);
-    }
-
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        padding: 15px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-        opacity: 0;
-        transition: opacity 0.3s ease-in;
-    `;
-
-    // Style based on alert type
-    switch(type) {
-        case 'success':
-            alert.style.backgroundColor = '#d4edda';
-            alert.style.color = '#155724';
-            break;
-        case 'error':
-            alert.style.backgroundColor = '#f8d7da';
-            alert.style.color = '#721c24';
-            break;
-        case 'warning':
-            alert.style.backgroundColor = '#fff3cd';
-            alert.style.color = '#856404';
-            break;
-        default:
-            alert.style.backgroundColor = '#d1ecf1';
-            alert.style.color = '#0c5460';
-    }
-
-    alertContainer.appendChild(alert);
-    
-    // Fade in
-    setTimeout(() => {
-        alert.style.opacity = '1';
-    }, 10);
-
-    // Remove alert after 3 seconds
-    setTimeout(() => {
-        alert.style.opacity = '0';
-        setTimeout(() => {
-            alertContainer.removeChild(alert);
-        }, 300);
-    }, 3000);
-}
-
-// Event listener for generate button
-document.addEventListener('DOMContentLoaded', () => {
-    const generateBtn = document.getElementById('generate-btn');
+// Initialize event listeners
+function initializeMemeGenerator() {
+    // Add click handler to generate button
     if (generateBtn) {
         generateBtn.addEventListener('click', generateMeme);
     }
-});
 
-// Export functions if needed
+    // Optional: Add keyboard shortcut (e.g., press 'G' to generate)
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'g' && !isGenerating && checkCooldown()) {
+            generateMeme();
+        }
+    });
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeMemeGenerator);
+
+// Export functions if needed for testing or external use
 export {
     generateMeme,
-    showAlert
+    displayMemes,
+    showAlert,
+    checkCooldown
 };

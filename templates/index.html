@@ -1,12 +1,18 @@
-{% extends "base.html" %}
-
-{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎭 AI Meme Newsletter</title>
+    
+    <!-- Meta tags for social sharing -->
+    <meta property="og:title" content="AI Meme Newsletter">
+    <meta property="og:description" content="Turn AI trends into viral memes using cutting-edge AI technology">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🎭</text></svg>">
+    
     <style>
         * {
             margin: 0;
@@ -16,9 +22,10 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 50%, #b8a3f2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             min-height: 100vh;
             color: #333;
+            overflow-x: hidden;
         }
 
         .container {
@@ -38,43 +45,58 @@
             background: rgba(255, 255, 255, 0.95);
             padding: 40px;
             border-radius: 25px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .header h1 {
             font-size: 3.5rem;
             margin-bottom: 20px;
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            font-weight: 800;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .header p {
             font-size: 1.3rem;
             color: #666;
             margin-bottom: 30px;
+            line-height: 1.6;
         }
 
         .form-container {
             background: rgba(255, 255, 255, 0.95);
             padding: 40px;
             border-radius: 25px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .form-section {
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .form-section h3 {
             color: #333;
             margin-bottom: 15px;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-weight: 600;
+        }
+
+        .form-section p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
         }
 
         .dropdown-container {
@@ -84,7 +106,7 @@
 
         .dropdown-button {
             width: 100%;
-            padding: 15px 20px;
+            padding: 18px 25px;
             background: white;
             border: 2px solid #e0e0e0;
             border-radius: 15px;
@@ -94,11 +116,22 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         .dropdown-button:hover {
-            border-color: #8b5cf6;
-            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .dropdown-arrow {
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-button.active .dropdown-arrow {
+            transform: rotate(180deg);
         }
 
         .dropdown-menu {
@@ -109,22 +142,36 @@
             background: white;
             border: 2px solid #e0e0e0;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             max-height: 300px;
             overflow-y: auto;
             display: none;
+            margin-top: 5px;
         }
 
         .dropdown-menu.active {
             display: block;
+            animation: dropdownSlide 0.3s ease;
+        }
+
+        @keyframes dropdownSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-item {
-            padding: 12px 20px;
+            padding: 15px 25px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
-            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 15px;
         }
 
         .dropdown-item:last-child {
@@ -132,53 +179,71 @@
         }
 
         .dropdown-item:hover {
-            background-color: #f8f9fa;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
+            transform: translateX(5px);
         }
 
         .selected-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-            min-height: 20px;
+            gap: 12px;
+            margin-top: 20px;
+            min-height: 24px;
         }
 
         .tag {
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 10px 18px;
+            border-radius: 25px;
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            animation: slideIn 0.3s ease;
+            gap: 10px;
+            animation: tagSlideIn 0.4s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            font-weight: 500;
         }
 
         .tag .remove {
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .tag .remove:hover {
-            transform: scale(1.2);
+            transform: scale(1.3);
+            background: rgba(255, 255, 255, 0.3);
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes tagSlideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(-15px) scale(0.8); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
         }
 
         .duration-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .duration-btn {
-            padding: 15px 20px;
+            padding: 18px 25px;
             border: 2px solid #e0e0e0;
             background: white;
             border-radius: 15px;
@@ -186,23 +251,27 @@
             transition: all 0.3s ease;
             text-align: center;
             font-weight: 600;
+            font-size: 15px;
         }
 
         .duration-btn:hover {
-            border-color: #8b5cf6;
-            color: #8b5cf6;
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
         }
 
         .duration-btn.active {
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border-color: transparent;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
         .generate-btn {
             width: 100%;
-            padding: 20px;
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            padding: 22px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
             color: white;
             border: none;
             border-radius: 20px;
@@ -210,12 +279,30 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 30px;
+            margin-top: 35px;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
         }
 
         .generate-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
         }
 
         .generate-btn:disabled {
@@ -233,37 +320,47 @@
             text-align: center;
             margin-bottom: 40px;
             background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 35px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .memes-header h2 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             margin-bottom: 15px;
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            font-weight: 700;
+        }
+
+        .memes-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-top: 10px;
         }
 
         .back-btn {
             background: rgba(255, 255, 255, 0.2);
-            color: #8b5cf6;
-            border: 2px solid #8b5cf6;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(10px);
             padding: 12px 25px;
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            font-size: 15px;
         }
 
         .back-btn:hover {
-            background: #8b5cf6;
-            color: white;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .memes-grid {
@@ -275,23 +372,61 @@
 
         .meme-card {
             border-radius: 20px;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
             cursor: pointer;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background: white;
+            position: relative;
+        }
+
+        .meme-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .meme-card:hover::before {
+            opacity: 1;
         }
 
         .meme-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.25);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
         }
 
         .meme-image {
             width: 100%;
-            height: 350px;
+            height: 400px;
             object-fit: cover;
             border-radius: 20px;
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .error-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #666;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            border: 2px dashed #ddd;
+        }
+
+        .error-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
         }
 
         /* Loading Spinner */
@@ -301,30 +436,34 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             color: white;
             text-align: center;
+            backdrop-filter: blur(5px);
         }
 
         .loading-content {
             background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            padding: 50px;
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            width: 90%;
         }
 
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid white;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 25px;
         }
 
         @keyframes spin {
@@ -332,34 +471,141 @@
             100% { transform: rotate(360deg); }
         }
 
+        .loading-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .loading-content p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
         .progress-bar {
-            width: 300px;
-            height: 8px;
+            width: 100%;
+            height: 10px;
             background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            margin: 20px auto;
+            border-radius: 5px;
+            margin: 25px 0 15px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(45deg, #8b5cf6, #f59e0b);
-            border-radius: 4px;
-            transition: width 0.3s ease;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            border-radius: 5px;
+            transition: width 0.5s ease;
             width: 0%;
+            position: relative;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        /* Alert Messages */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 3000;
+            max-width: 300px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .alert.show {
+            transform: translateX(0);
+        }
+
+        .alert.success {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+        }
+
+        .alert.error {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        }
+
+        .alert.warning {
+            background: linear-gradient(45deg, #f7971e, #ffd200);
         }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .container { padding: 15px; }
-            .header h1 { font-size: 2.5rem; }
-            .memes-grid { grid-template-columns: 1fr; }
-            .form-container { padding: 25px; }
-            .duration-buttons { grid-template-columns: repeat(2, 1fr); }
+            .container { 
+                padding: 15px; 
+            }
+            
+            .header h1 { 
+                font-size: 2.5rem; 
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+            
+            .memes-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .form-container { 
+                padding: 25px; 
+            }
+            
+            .duration-buttons { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .form-section h3 {
+                font-size: 1.2rem;
+            }
+            
+            .meme-image {
+                height: 300px;
+            }
+            
+            .loading-content {
+                padding: 30px;
+            }
         }
 
         .hidden {
             display: none !important;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Selection styles */
+        ::selection {
+            background: rgba(102, 126, 234, 0.3);
         }
     </style>
 </head>
@@ -369,18 +615,18 @@
         <div class="landing-page" id="landingPage">
             <div class="header">
                 <h1>🎭 AI Meme Newsletter</h1>
-                <p>Turn the latest AI trends into viral memes using cutting-edge AI technology</p>
+                <p>Transform the latest AI trends into viral memes using cutting-edge AI technology</p>
             </div>
 
             <div class="form-container">
                 <div class="form-section">
                     <h3>🔥 Select AI Trends</h3>
-                    <p style="color: #666; margin-bottom: 15px;">Choose the AI topics you want memes about</p>
+                    <p>Choose the AI topics you want personalized memes about</p>
                     
                     <div class="dropdown-container">
-                        <button class="dropdown-button" onclick="toggleDropdown()">
+                        <button class="dropdown-button" onclick="toggleDropdown()" id="dropdownButton">
                             <span>Select AI Trends...</span>
-                            <span>▼</span>
+                            <span class="dropdown-arrow">▼</span>
                         </button>
                         <div class="dropdown-menu" id="dropdownMenu">
                             <div class="dropdown-item" onclick="selectTrend('OpenAI GPT-5')">🤖 OpenAI GPT-5</div>
@@ -393,6 +639,8 @@
                             <div class="dropdown-item" onclick="selectTrend('AI Hardware')">⚡ AI Hardware</div>
                             <div class="dropdown-item" onclick="selectTrend('AI Safety')">🛡️ AI Safety</div>
                             <div class="dropdown-item" onclick="selectTrend('AGI Development')">🌟 AGI Development</div>
+                            <div class="dropdown-item" onclick="selectTrend('Machine Learning')">📊 Machine Learning</div>
+                            <div class="dropdown-item" onclick="selectTrend('Neural Networks')">🧮 Neural Networks</div>
                         </div>
                     </div>
 
@@ -403,7 +651,7 @@
 
                 <div class="form-section">
                     <h3>⏰ Time Duration</h3>
-                    <p style="color: #666; margin-bottom: 15px;">How recent should the news be?</p>
+                    <p>How recent should the AI news be for meme generation?</p>
                     
                     <div class="duration-buttons">
                         <button class="duration-btn active" data-duration="1" onclick="selectDuration(this, 1)">
@@ -432,7 +680,8 @@
             <button class="back-btn" onclick="goBack()">← Back to Generator</button>
             
             <div class="memes-header">
-                <h2>Your personalized Meme newsletter</h2>
+                <h2>🎭 Your AI Meme Newsletter</h2>
+                <p>Fresh memes generated from the latest AI trends</p>
             </div>
 
             <div class="memes-grid" id="memesGrid">
@@ -450,7 +699,7 @@
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
-            <p id="progressText">0% Complete</p>
+            <p class="progress-text" id="progressText">0% Complete</p>
         </div>
     </div>
 
@@ -463,7 +712,16 @@
         // Dropdown functionality
         function toggleDropdown() {
             const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('active');
+            const button = document.getElementById('dropdownButton');
+            const isActive = menu.classList.contains('active');
+            
+            if (isActive) {
+                menu.classList.remove('active');
+                button.classList.remove('active');
+            } else {
+                menu.classList.add('active');
+                button.classList.add('active');
+            }
         }
 
         // Close dropdown when clicking outside
@@ -471,6 +729,7 @@
             const dropdown = document.querySelector('.dropdown-container');
             if (!dropdown.contains(event.target)) {
                 document.getElementById('dropdownMenu').classList.remove('active');
+                document.getElementById('dropdownButton').classList.remove('active');
             }
         });
 
@@ -481,6 +740,7 @@
                 updateSelectedTags();
             }
             document.getElementById('dropdownMenu').classList.remove('active');
+            document.getElementById('dropdownButton').classList.remove('active');
         }
 
         // Remove trend
@@ -495,7 +755,7 @@
             container.innerHTML = selectedTrends.map(trend => 
                 `<div class="tag">
                     ${trend}
-                    <span class="remove" onclick="removeTrend('${trend}')">×</span>
+                    <span class="remove" onclick="removeTrend('${trend.replace(/'/g, "\\'")}')">×</span>
                 </div>`
             ).join('');
         }
@@ -512,10 +772,50 @@
             selectedDuration = duration;
         }
 
+        // Show alert messages
+        function showAlert(message, type = 'success') {
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => alert.classList.add('show'), 100);
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        }
+
+        // Actual API call to Flask backend
+        async function callActualAPI() {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    trends: selectedTrends,
+                    duration: selectedDuration
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to generate memes');
+            }
+            
+            return data.memes;
+        }
+
         // Generate memes
         async function generateMemes() {
             if (selectedTrends.length === 0) {
-                alert('Please select at least one AI trend!');
+                showAlert('Please select at least one AI trend!', 'warning');
                 return;
             }
 
@@ -523,99 +823,38 @@
             showLoading();
             
             try {
-                // Simulate progress
+                // Simulate progress for better UX
                 updateProgress(20, 'Fetching latest AI news...');
-                await sleep(1000);
+                await sleep(800);
                 
-                updateProgress(40, 'Analyzing news articles...');
-                await sleep(1000);
+                updateProgress(40, 'Analyzing news articles with AI...');
+                await sleep(800);
                 
                 updateProgress(60, 'Generating meme prompts...');
-                await sleep(1000);
+                await sleep(800);
                 
                 updateProgress(80, 'Creating AI-powered memes...');
                 
-                // Simulate API call - replace with actual API call
-                const mockMemes = await simulateAPICall();
+                // Call actual API
+                const memes = await callActualAPI();
                 
                 updateProgress(100, 'Memes ready!');
                 await sleep(500);
                 
                 // Store results and switch to memes page
-                generatedMemes = mockMemes;
+                generatedMemes = memes;
                 showMemesPage();
+                
+                // Show success message
+                const successCount = memes.filter(m => m.success).length;
+                showAlert(`🎉 Successfully generated ${successCount} memes!`, 'success');
                 
             } catch (error) {
                 console.error('Error generating memes:', error);
-                alert('Failed to generate memes. Please try again.');
+                showAlert(`Failed to generate memes: ${error.message}`, 'error');
             } finally {
                 hideLoading();
             }
-        }
-
-        // Simulate API call (replace with actual implementation)
-        async function simulateAPICall() {
-            // This is where you'd call your actual API
-            // const response = await fetch('/api/generate', {
-            //     method: 'POST',
-            //     headers: {'Content-Type': 'application/json'},
-            //     body: JSON.stringify({
-            //         trends: selectedTrends,
-            //         duration: selectedDuration
-            //     })
-            // });
-            // const data = await response.json();
-            // return data.memes;
-
-            // Mock data for demo
-            await sleep(2000); // Simulate API delay
-            
-            return selectedTrends.map((trend, index) => ({
-                success: true,
-                prompt: `${getRandomMemeTemplate()} about ${trend} revolutionizing AI industry with breakthrough innovations`,
-                url: `https://example.com/ai-news-${index + 1}`,
-                png_base64: generateMockImage(trend),
-                timestamp: new Date().toISOString()
-            }));
-        }
-
-        // Get random meme template
-        function getRandomMemeTemplate() {
-            const templates = [
-                "Drake pointing meme: Drake rejects old technology, enthusiastically points at",
-                "Expanding brain meme: Evolution from basic AI to advanced",
-                "Distracted boyfriend meme: Developers distracted by new",
-                "This is fine meme: Everything is calm while",
-                "Two buttons meme: Difficult choice between traditional methods and"
-            ];
-            return templates[Math.floor(Math.random() * templates.length)];
-        }
-
-        // Generate mock base64 image (replace with actual images)
-        function generateMockImage(trend) {
-            // In real implementation, this would be the actual base64 from your API
-            // For demo, return a simple colored rectangle
-            const canvas = document.createElement('canvas');
-            canvas.width = 400;
-            canvas.height = 400;
-            const ctx = canvas.getContext('2d');
-            
-            // Random gradient background
-            const gradient = ctx.createLinearGradient(0, 0, 400, 400);
-            gradient.addColorStop(0, `hsl(${Math.random() * 360}, 70%, 60%)`);
-            gradient.addColorStop(1, `hsl(${Math.random() * 360}, 70%, 40%)`);
-            
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 400, 400);
-            
-            // Add text
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('🎭 AI MEME', 200, 180);
-            ctx.fillText(trend, 200, 220);
-            
-            return canvas.toDataURL().split(',')[1]; // Return base64 without data:image prefix
         }
 
         // Show memes page
@@ -625,32 +864,46 @@
             
             // Render memes
             renderMemes();
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
         }
 
         // Render memes
         function renderMemes() {
             const container = document.getElementById('memesGrid');
             
+            if (generatedMemes.length === 0) {
+                container.innerHTML = `
+                    <div class="error-card">
+                        <div class="error-content">
+                            <h3>🤔 No Memes Generated</h3>
+                            <p>Try selecting different trends or adjusting the time duration.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
             container.innerHTML = generatedMemes.map((meme, index) => {
                 if (!meme.success) {
                     return `
-                        <div class="meme-card">
-                            <div style="display: flex; align-items: center; justify-content: center; height: 350px; color: #666; text-align: center;">
-                                <div>
-                                    <h3>❌ Generation Failed</h3>
-                                    <p>${meme.error || 'Unknown error'}</p>
-                                </div>
+                        <div class="error-card">
+                            <div class="error-content">
+                                <h3>❌ Generation Failed</h3>
+                                <p>${meme.error || 'Unknown error occurred'}</p>
                             </div>
                         </div>
                     `;
                 }
 
                 return `
-                    <div class="meme-card" onclick="openMemeLink('${meme.url}')">
+                    <div class="meme-card" onclick="openMemeLink('${meme.url}')" title="Click to view source article">
                         <img src="data:image/png;base64,${meme.png_base64}" 
-                             alt="AI Generated Meme" 
+                             alt="AI Generated Meme about ${meme.prompt}" 
                              class="meme-image"
-                             loading="lazy">
+                             loading="lazy"
+                             onerror="this.parentElement.innerHTML='<div class=\\'error-card\\'><div class=\\'error-content\\'><h3>🖼️ Image Error</h3><p>Failed to load meme image</p></div></div>'">
                     </div>
                 `;
             }).join('');
@@ -658,13 +911,18 @@
 
         // Open meme link
         function openMemeLink(url) {
-            window.open(url, '_blank');
+            if (url && url !== 'https://example.com') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
         }
 
         // Go back to landing page
         function goBack() {
             document.getElementById('memesPage').style.display = 'none';
             document.getElementById('landingPage').style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
         }
 
         // Loading functions
@@ -688,11 +946,204 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Press 'G' to generate memes
+            if (e.key.toLowerCase() === 'g' && !document.getElementById('loadingOverlay').classList.contains('hidden') === false) {
+                if (selectedTrends.length > 0) {
+                    generateMemes();
+                }
+            }
+            
+            // Press 'Escape' to close dropdown
+            if (e.key === 'Escape') {
+                document.getElementById('dropdownMenu').classList.remove('active');
+                document.getElementById('dropdownButton').classList.remove('active');
+            }
+            
+            // Press 'Backspace' to go back from memes page
+            if (e.key === 'Backspace' && document.getElementById('memesPage').style.display === 'block') {
+                e.preventDefault();
+                goBack();
+            }
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Page is hidden, pause any animations
+                document.querySelectorAll('.spinner').forEach(spinner => {
+                    spinner.style.animationPlayState = 'paused';
+                });
+            } else {
+                // Page is visible, resume animations
+                document.querySelectorAll('.spinner').forEach(spinner => {
+                    spinner.style.animationPlayState = 'running';
+                });
+            }
+        });
+
+        // Add some Easter eggs
+        let clickCount = 0;
+        document.querySelector('.header h1').addEventListener('click', function() {
+            clickCount++;
+            if (clickCount === 5) {
+                showAlert('🎭 You found the Easter egg! You really love AI memes!', 'success');
+                clickCount = 0;
+            }
+        });
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎭 AI Meme Newsletter initialized');
+            
+            // Add some welcome animation
+            setTimeout(() => {
+                document.querySelector('.header').style.animation = 'fadeInUp 0.8s ease';
+                document.querySelector('.form-container').style.animation = 'fadeInUp 0.8s ease 0.2s both';
+            }, 100);
         });
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Performance optimization: Lazy load images
+        function setupLazyLoading() {
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.classList.add('fade-in');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                images.forEach(img => imageObserver.observe(img));
+            }
+        }
+
+        // Call lazy loading setup when memes are rendered
+        const originalRenderMemes = renderMemes;
+        renderMemes = function() {
+            originalRenderMemes();
+            setupLazyLoading();
+        };
+
+        // Add error handling for network issues
+        window.addEventListener('online', () => {
+            showAlert('🌐 Connection restored!', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showAlert('🚫 No internet connection. Please check your network.', 'error');
+        });
+
+        // Add smooth fade-in for loaded images
+        const imageStyle = document.createElement('style');
+        imageStyle.textContent = `
+            .meme-image {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            
+            .meme-image.loaded {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(imageStyle);
+
+        // Handle image load events
+        document.addEventListener('load', function(e) {
+            if (e.target.classList.contains('meme-image')) {
+                e.target.classList.add('loaded');
+            }
+        }, true);
+
+        // Add touch support for mobile
+        let touchStartY = 0;
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchStartY - touchEndY;
+            
+            // Swipe up gesture to generate memes (mobile)
+            if (diff > 100 && selectedTrends.length > 0 && document.getElementById('landingPage').style.display !== 'none') {
+                generateMemes();
+            }
+        });
+
+        // Add analytics tracking (you can replace with your analytics)
+        function trackEvent(eventName, properties = {}) {
+            console.log(`📊 Event: ${eventName}`, properties);
+            // Replace with your analytics service
+            // analytics.track(eventName, properties);
+        }
+
+        // Track user interactions
+        const originalSelectTrend = selectTrend;
+        selectTrend = function(trend) {
+            trackEvent('trend_selected', { trend });
+            originalSelectTrend(trend);
+        };
+
+        const originalGenerateMemes = generateMemes;
+        generateMemes = function() {
+            trackEvent('memes_generation_started', { 
+                trends: selectedTrends,
+                duration: selectedDuration 
+            });
+            originalGenerateMemes();
+        };
+
+        // Add accessibility improvements
+        document.addEventListener('keydown', function(e) {
+            // Focus management for dropdown
+            if (e.key === 'Enter' || e.key === ' ') {
+                const activeElement = document.activeElement;
+                if (activeElement.classList.contains('dropdown-item')) {
+                    e.preventDefault();
+                    activeElement.click();
+                }
+            }
+        });
+
+        // Add ARIA labels and roles for better accessibility
+        document.getElementById('dropdownButton').setAttribute('aria-expanded', 'false');
+        document.getElementById('dropdownButton').setAttribute('aria-haspopup', 'listbox');
+        document.getElementById('dropdownMenu').setAttribute('role', 'listbox');
+        
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.setAttribute('role', 'option');
+            item.setAttribute('tabindex', '0');
+        });
+
+        // Update ARIA attributes when dropdown state changes
+        const originalToggleDropdown = toggleDropdown;
+        toggleDropdown = function() {
+            originalToggleDropdown();
+            const isOpen = document.getElementById('dropdownMenu').classList.contains('active');
+            document.getElementById('dropdownButton').setAttribute('aria-expanded', isOpen);
+        };
     </script>
 </body>
 </html>
-{% endblock %}
