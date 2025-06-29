@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    {% include 'components/header.html' %}
+    {% include 'components/news_ticker.html' %}
+    
+    <div class="controls">
+        <button onclick="generateMeme()" class="btn btn-primary" id="generate-btn">
+            🎲 Generate AI Meme
+        </button>
+        <button onclick="sortMemes('recent')" class="btn btn-secondary {% if sort_by == 'recent' %}active{% endif %}" id="sort-recent">
+            🕒 Recent
+        </button>
+        <button onclick="sortMemes('popular')" class="btn btn-secondary {% if sort_by == 'popular' %}active{% endif %}" id="sort-popular">
+            🔥 Popular
+        </button>
+    </div>
+
+    <div class="meme-gallery" id="meme-gallery">
+        {% if memes %}
+            {% for meme in memes %}
+                {% include 'components/meme_card.html' %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🎭</div>
+                <h3>No memes yet!</h3>
+                <p>Be the first to generate an AI meme from today's news.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Generating overlay -->
+<div class="generating-overlay" id="generating-overlay" style="display: none;">
+    <div class="generating-content">
+        <div class="spinner"></div>
+        <h3>🤖 AI Meme Chef at Work</h3>
+        <p>Creating fresh memes from breaking AI news...</p>
+        <div class="generating-steps">
+            <div class="step" id="step-1">📰 Fetching latest AI news...</div>
+            <div class="step" id="step-2">🎭 Selecting perfect meme template...</div>
+            <div class="step" id="step-3">✍️ Generating witty text with GPT...</div>
+            <div class="step" id="step-4">🎨 Creating custom image with AI...</div>
+            <div class="step" id="step-5">🚀 Adding finishing touches...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/meme_generator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/news_display.js') }}"></script>
+{% endblock %}
+
+
+

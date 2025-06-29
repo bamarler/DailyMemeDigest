@@ -1,0 +1,30 @@
+<div class="meme-card" data-meme-id="{{ meme.id }}">
+    <div class="meme-meta">
+        <span class="meme-template">{{ meme.template_name.replace('_', ' ').upper() }}</span>
+        <button class="vote-btn" onclick="voteMeme('{{ meme.id }}')" id="vote-{{ meme.id }}">
+            👍 {{ meme.votes }}
+        </button>
+    </div>
+    
+    {% if meme.image_data %}
+    <img src="data:image/png;base64,{{ meme.image_data }}" class="meme-image" alt="AI Generated Meme" loading="lazy">
+    {% else %}
+    <div class="meme-image placeholder">🎭</div>
+    {% endif %}
+    
+    <div class="meme-source">
+        📰 <strong>{{ meme.news_source }}</strong>
+        {% if hasattr(meme, 'news_title') and meme.news_title %}
+        <div class="meme-news-title">{{ meme.news_title[:100] }}...</div>
+        {% endif %}
+    </div>
+    
+    <div class="share-buttons">
+        <button class="share-btn share-twitter" onclick="shareToTwitter('{{ meme.id }}')">
+            🐦 Tweet
+        </button>
+        <button class="share-btn share-copy" onclick="copyMemeLink('{{ meme.id }}')">
+            📋 Copy
+        </button>
+    </div>
+</div>
