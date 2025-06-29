@@ -17,7 +17,7 @@ class Config:
     DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
     # API Keys
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-openai-key-here')
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
     NEWS_API_KEY = os.getenv('NEWS_API_KEY', 'your-news-api-key-here')
     
     # Database

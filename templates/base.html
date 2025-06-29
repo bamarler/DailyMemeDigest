@@ -1,35 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}🎭 AI Meme Factory{% endblock %}</title>
+    <title>{% block title %}🎭 AI Meme Newsletter{% endblock %}</title>
     
     <!-- Meta tags for social sharing -->
-    <meta property="og:title" content="AI Meme Factory - Turn AI News into Viral Memes">
-    <meta property="og:description" content="Generate hilarious memes from the latest AI news using GPT-powered humor">
+    <meta property="og:title" content="AI Meme Newsletter">
+    <meta property="og:description" content="Turn AI trends into viral memes using cutting-edge AI technology">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI Meme Factory">
-    <meta name="twitter:description" content="AI creating memes about AI - Built for Sundai Club">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     {% block extra_css %}{% endblock %}
     
     <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🎭</text></svg>">
 </head>
 <body>
-    <div id="app">
-        {% block content %}{% endblock %}
-    </div>
+    {% block content %}{% endblock %}
     
     <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

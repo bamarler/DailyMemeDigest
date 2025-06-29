@@ -8,7 +8,7 @@ import os
 from src.config import Config
 from src.database import Database
 from src.news_aggregator import NewsAPIAggregator
-from src.meme_generator import AIMemeGenerator
+from src.meme_generator import generate_meme_image
 from src.models import GeneratedMeme
 from datetime import datetime
 import uuid
