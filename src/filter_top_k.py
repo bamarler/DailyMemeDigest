@@ -28,6 +28,7 @@ def rank_articles(articles: List[Dict], keywords: List[str]) -> List[Dict]:
 def get_top_articles(raw_json_list: List, num_to_select: int, user_keywords: List[str]) -> List[Dict]:
     articles = load_jsons(raw_json_list)
     ranked_articles = rank_articles(articles, user_keywords)
+    print(f"filtered and returned {num_to_select} articles")
     return ranked_articles[:num_to_select]
 
 # Sample Call

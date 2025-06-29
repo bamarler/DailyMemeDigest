@@ -41,15 +41,18 @@ def generate_meme_prompts(articles: List[Dict]) -> List[Tuple[str, str]]:
         return []
     
     meme_templates = load_meme_templates()
+    print(f"found {len(meme_templates)} meme templates.")
     
     # Step 1: Get semantic matches between articles and memes
     matches = get_article_meme_matches(articles, meme_templates)
+    print(f"{len(matches)} matches")
     
     # Step 2: Enrich articles with matched memes
     enriched_articles = enrich_articles_with_memes(articles, meme_templates, matches)
-    
+    print(f"{len(enriched_articles)} enriched_articles")
     # Step 3: Generate prompts for the matched pairs
     prompts = generate_prompts_from_matches(enriched_articles)
+    print(f"generated {len(prompts)}")
     
     # Validate output length
     if len(prompts) != len(articles):
@@ -136,8 +139,8 @@ def get_article_meme_matches(articles: List[Dict], meme_templates: List[Dict]) -
             raise ValueError(f"Expected list of {len(articles)} indices")
             
         # Check for duplicates
-        if len(set(matches)) != len(matches):
-            raise ValueError("Duplicate meme assignments detected")
+        # if len(set(matches)) != len(matches):
+        #     raise ValueError("Duplicate meme assignments detected")
             
         # Check indices are valid
         for idx in matches:
