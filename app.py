@@ -153,7 +153,7 @@ def create_app():
                 })
             
             print(f"🎯 Filtering top articles from {len(articles)} total...")
-            top_articles = get_top_articles(articles, 1, trends)
+            top_articles = get_top_articles(articles, 2, trends)
             
             print("💭 Generating prompts...")
             prompts = generate_meme_prompts(top_articles)
