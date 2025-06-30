@@ -10,6 +10,7 @@ class MemeAPI {
 
     /**
      * Generate memes from selected trends and duration
+     * 
      * @param {Array} trends - Selected AI trends
      * @param {number} duration - Duration in days
      * @returns {Promise<Array>} Generated memes
@@ -47,9 +48,10 @@ class MemeAPI {
 
     /**
      * Get existing memes from the database
+     * 
      * @param {string} sortBy - Sort order ('recent' or 'popular')
-     * @param {number} limit - Number of memes to retrieve
-     * @returns {Promise<Array>} Existing memes
+     * @param {number} limit - Number of memes to retrieve (0 for all)
+     * @returns {Promise<Object>} Response with memes array and metadata
      */
     async getMemes(sortBy = 'recent', limit = 20) {
         try {
@@ -60,15 +62,26 @@ class MemeAPI {
             }
             
             const data = await response.json();
-            return data.memes || [];
+            
+            // Ensure we return the expected structure
+            return {
+                success: data.success || true,
+                memes: data.memes || [],
+                total_count: data.total_count || 0
+            };
         } catch (error) {
             console.error('Error fetching memes:', error);
-            return [];
+            return {
+                success: false,
+                memes: [],
+                error: error.message
+            };
         }
     }
 
     /**
      * Get recent news articles
+     * 
      * @param {number} duration - Duration in days
      * @returns {Promise<Array>} News articles
      */
@@ -90,6 +103,7 @@ class MemeAPI {
 
     /**
      * Health check endpoint
+     * 
      * @returns {Promise<Object>} Health status
      */
     async healthCheck() {

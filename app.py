@@ -1,89 +1,3 @@
-# # ==============================================================================
-# # FILE: app.py
-# # Main Flask application - entry point
-# # ==============================================================================
-
-# from flask import Flask, render_template, request, jsonify
-# import os
-# import json
-# from dotenv import load_dotenv
-
-# # Load environment variables
-
-
-
-# from src.news_aggregator import get_news_articles
-# from src.filter_top_k import get_top_articles
-# from src.prompt_generator import generate_meme_prompts
-# from src.meme_generator import generate_meme_image
-
-# load_dotenv()
-
-# def create_app():
-#     app = Flask(__name__)
-#     # app.config.from_object(Config) 
-
-#     @app.route('/')
-#     def index():
-#         """Serve the main HTML page"""
-#         return render_template('index.html')
-    
-#     @app.route('/api/generate', methods=['POST'])
-#     def generate_meme():
-#         # Get JSON data from request body
-#         data = request.get_json()
-        
-#         # Extract fields with defaults
-#         trends = data.get('trends', [])  # List of keywords
-#         duration = data.get('duration', 1)  # Days back, default to 1
-        
-#         # Call your methods with the extracted data
-#         articles = get_news_articles(trends, days_back=duration)
-#         top_articles = get_top_articles(articles, 1, trends)
-#         prompts = generate_meme_prompts(top_articles)
-#         print(prompts)
-#         memes = generate_meme_image(prompts)
-
-#         # Filter successful memes
-#         parsed_memes = json.loads(memes)
-#         successful_memes = [meme for meme in parsed_memes["memes"] if meme["success"]]
-        
-#         if successful_memes:
-#             # Read existing memes
-#             try:
-#                 with open("database/memes.json", "r") as f:
-#                     existing_memes = json.load(f)
-#             except (FileNotFoundError, json.JSONDecodeError):
-#                 existing_memes = []
-            
-#             # Append new memes
-#             existing_memes.extend(successful_memes)
-            
-#             # Write back
-#             with open("database/memes.json", "w") as f:
-#                 json.dump(existing_memes, f, indent=2)
-        
-#         # Return the prompts as JSON
-#         return jsonify(memes)
-    
-#     @app.route('/api/memes')
-#     def get_memes():
-#         with open("database/memes.json", "r") as f:
-#             memes = json.load(f)
-#         return jsonify(memes)
-    
-#     return app
-
-# if __name__ == '__main__':
-#     app = create_app()
-#     print("🎭 Starting AI Meme Factory...")
-#     print("🔑 Make sure to set your OPENAI_API_KEY and NEWS_API_KEY environment variables!")
-#     print(os.getenv('NEWS_API_KEY'))
-#     print(f"📰 News API Key configured: {'✅' if os.getenv('NEWS_API_KEY') != 'your-news-api-key-here' else '❌'}")
-#     print(f"🤖 OpenAI API Key configured: {'✅' if os.getenv('OPENAI_API_KEY') != 'your-openai-key-here' else '❌'}")
-#     print(f"🤖 Gemini API Key configured: {'✅' if os.getenv('GEMINI_API_KEY') != 'your-gemini-key-here' else '❌'}")
-#     app.run(debug=True, host='0.0.0.0', port=5001)
-
 # ==============================================================================
 # FILE: app.py
 # Main Flask application - entry point
@@ -115,6 +29,11 @@ def create_app():
         """Serve the main HTML page"""
         return render_template('index.html')
     
+    @app.route('/history')
+    def history():
+        """Serve the history/previous generations page"""
+        return render_template('history.html')
+    
     @app.route('/api/generate', methods=['POST'])
     def generate_meme():
         """
@@ -127,7 +46,7 @@ def create_app():
         - JSON response with generated memes (only successful ones)
         """
         try:
-            print("🎲 Starting meme generation...")
+            print("Starting meme generation...")
             
             data = request.get_json()
             
@@ -140,7 +59,7 @@ def create_app():
             trends = data.get('trends', [])
             duration = data.get('duration', 1)
             
-            print(f"📊 Request: Trends={trends}, Duration={duration} days")
+            print(f"Request: Trends={trends}, Duration={duration} days")
             
             if not trends:
                 return jsonify({
@@ -148,7 +67,7 @@ def create_app():
                     'error': 'Please select at least one AI trend'
                 }), 400
             
-            print("📰 Fetching articles...")
+            print("Fetching articles...")
             articles = get_news_articles(trends, days_back=duration)
             
             if not articles:
@@ -157,10 +76,10 @@ def create_app():
                     'error': 'No articles found for selected trends'
                 })
             
-            print(f"🎯 Filtering top articles from {len(articles)} total...")
+            print(f"Filtering top articles from {len(articles)} total...")
             top_articles = get_top_articles(articles, 10, trends)
             
-            print("💭 Generating prompts...")
+            print("Generating prompts...")
             prompts = generate_meme_prompts(top_articles)
             print(f"Generated prompts: {prompts}")
             
@@ -170,7 +89,7 @@ def create_app():
                     'error': 'Failed to generate meme prompts'
                 })
             
-            print("🎨 Generating memes...")
+            print("Generating memes...")
             memes = generate_meme_image(prompts)
             
             if isinstance(memes, str):
@@ -186,7 +105,7 @@ def create_app():
 
             successful_memes = [meme for meme in parsed_memes["memes"] if meme.get("success", False)]
             
-            print(f"✅ Generated {len(successful_memes)} successful memes")
+            print(f"Generated {len(successful_memes)} successful memes")
             
             if successful_memes:
                 try:
@@ -208,10 +127,10 @@ def create_app():
                     with open("database/memes.json", "w") as f:
                         json.dump(existing_memes, f, indent=2)
                     
-                    print(f"💾 Saved {len(successful_memes)} memes to database")
+                    print(f"Saved {len(successful_memes)} memes to database")
                     
                 except Exception as e:
-                    print(f"⚠️ Warning: Could not save memes: {e}")
+                    print(f"Warning: Could not save memes: {e}")
             
             # Create filtered response with only successful memes
             filtered_response = {
@@ -224,7 +143,7 @@ def create_app():
             return jsonify(filtered_response)
                 
         except Exception as e:
-            print(f"❌ Error in meme generation: {str(e)}")
+            print(f"Error in meme generation: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': f'Meme generation failed: {str(e)}'
@@ -235,11 +154,17 @@ def create_app():
         """Get existing memes from database"""
         try:
             sort_by = request.args.get('sort', 'recent')
-            limit = int(request.args.get('limit', 20))
             
             try:
                 with open("database/memes.json", "r") as f:
-                    all_memes = json.load(f)
+                    data = json.loads(f.read())
+                    # Handle both list and dict formats
+                    if isinstance(data, list):
+                        all_memes = data
+                    elif isinstance(data, dict) and 'memes' in data:
+                        all_memes = data['memes']
+                    else:
+                        all_memes = []
             except (FileNotFoundError, json.JSONDecodeError):
                 all_memes = []
             
@@ -248,17 +173,14 @@ def create_app():
                 # Sort by generated_at if available
                 all_memes.sort(key=lambda x: x.get('generated_at', ''), reverse=True)
             
-            # Limit results
-            memes = all_memes[:limit] if limit > 0 else all_memes
-            
             return jsonify({
                 'success': True,
-                'memes': memes,
+                'memes': all_memes,
                 'total_count': len(all_memes)
             })
             
         except Exception as e:
-            print(f"❌ Error getting memes: {str(e)}")
+            print(f"Error getting memes: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': str(e)
@@ -284,7 +206,7 @@ def create_app():
                     'source': article.get('source', {}).get('name', 'Unknown'),
                     'published': article.get('publishedAt', ''),
                     'url': article.get('url', ''),
-                    'description': article.get('description', '')[:200] + '...' if article.get('description') else ''
+                    'description': article.get('description', '')[:500] + '...' if article.get('description') else ''
                 })
             
             return jsonify({
@@ -293,7 +215,7 @@ def create_app():
             })
             
         except Exception as e:
-            print(f"❌ Error getting news: {str(e)}")
+            print(f"Error getting news: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': str(e)
@@ -324,23 +246,26 @@ if __name__ == '__main__':
     os.makedirs("database", exist_ok=True)
     
     app = create_app()
-    print("🎭 Starting AI Meme Factory...")
-    print("🔑 Make sure to set your API keys in environment variables!")
+    print("Starting AI Meme Factory...")
+    print("Make sure to set your API keys in environment variables!")
     
     # Debug: Print actual API key (first few chars only)
     news_key = os.getenv('NEWS_API_KEY')
     if news_key:
-        print(f"📰 News API Key: {news_key[:10]}...")
+        print(f"News API Key: {news_key[:10]}...")
     
-    print(f"📰 News API Key configured: {'✅' if os.getenv('NEWS_API_KEY') != 'your-news-api-key-here' else '❌'}")
-    print(f"🤖 OpenAI API Key configured: {'✅' if os.getenv('OPENAI_API_KEY') != 'your-openai-key-here' else '❌'}")
-    print(f"🤖 Gemini API Key configured: {'✅' if os.getenv('GEMINI_API_KEY') != 'your-gemini-key-here' else '❌'}")
+    print(f"News API Key configured: {'YES' if os.getenv('NEWS_API_KEY') != 'your-news-api-key-here' else 'NO'}")
+    print(f"OpenAI API Key configured: {'YES' if os.getenv('OPENAI_API_KEY') != 'your-openai-key-here' else 'NO'}")
+    print(f"Gemini API Key configured: {'YES' if os.getenv('GEMINI_API_KEY') != 'your-gemini-key-here' else 'NO'}")
     
-    print("\n🌐 Server Info:")
-    print("📁 Templates folder: templates/")
-    print("📁 Static files folder: static/")
-    print("🎯 Main page: http://localhost:5001")
-    print("🔌 API endpoints:")
+    print("\nServer Info:")
+    print("Templates folder: templates/")
+    print("   - index.html (main page)")
+    print("   - history.html (previous generations)")
+    print("Static files folder: static/")
+    print("Main page: http://localhost:5001")
+    print("History page: http://localhost:5001/history")
+    print("API endpoints:")
     print("   - POST /api/generate (generate memes)")
     print("   - GET  /api/memes (get existing memes)")
     print("   - GET  /api/news (get news preview)")

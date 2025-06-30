@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous Memes - AI Meme Newsletter</title>
+    
+    <!-- Meta tags for social sharing -->
+    <meta property="og:title" content="Previous Memes - AI Meme Newsletter">
+    <meta property="og:description" content="Browse through all previously generated AI memes">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>M</text></svg>">
+    
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/history.css">
+</head>
+<body>
+    <div class="container">
+        <div class="history-header">
+            <a href="/" class="back-btn-inline">← Back to Generator</a>
+            <h2>Previous Memes</h2>
+            <p>Browse through all previously generated AI memes</p>
+        </div>
+
+        <div class="memes-grid" id="historyGrid">
+            <!-- Previous memes will be rendered here -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button class="pagination-btn" id="prevPageBtn">← Previous</button>
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button class="pagination-btn" id="nextPageBtn">Next →</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>Loading Memes</h3>
+            <p>Fetching your previous generations...</p>
+        </div>
+    </div>
+
+    <!-- Load JavaScript modules -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/history-page.js"></script>
+    
+    <!-- Initialize -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.memeAPI === 'undefined') {
+                console.error('memeAPI not loaded');
+                return;
+            }
+            
+            console.log('Dependencies loaded, initializing history page...');
+            
+            if (window.historyPage) {
+                window.historyPage.init();
+            }
+        });
+    </script>
+</body>
+</html>

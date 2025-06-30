@@ -1,6 +1,6 @@
 /**
  * UI interactions for AI Meme Newsletter
- * Handles all user interface logic
+ * Handles all user interface logic for the main page
  */
 
 class MemeUI {
@@ -11,7 +11,6 @@ class MemeUI {
         
         console.log('🎨 MemeUI initializing...');
         
-        // Initialize when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
@@ -33,7 +32,6 @@ class MemeUI {
      * Initialize all event listeners
      */
     initializeEventListeners() {
-        // Dropdown functionality
         const dropdownButton = document.getElementById('dropdownButton');
         const dropdownMenu = document.getElementById('dropdownMenu');
         
@@ -41,7 +39,6 @@ class MemeUI {
             dropdownButton.addEventListener('click', () => this.toggleDropdown());
         }
 
-        // Dropdown items
         const dropdownItems = document.querySelectorAll('.dropdown-item');
         dropdownItems.forEach(item => {
             item.addEventListener('click', (e) => {
@@ -50,7 +47,6 @@ class MemeUI {
             });
         });
 
-        // Duration buttons
         const durationButtons = document.querySelectorAll('.duration-btn');
         durationButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -59,19 +55,16 @@ class MemeUI {
             });
         });
 
-        // Generate button
         const generateBtn = document.getElementById('generateBtn');
         if (generateBtn) {
             generateBtn.addEventListener('click', () => this.handleGenerateMemes());
         }
 
-        // Back button
         const backBtn = document.getElementById('backBtn');
         if (backBtn) {
             backBtn.addEventListener('click', () => this.goBack());
         }
 
-        // Click outside dropdown to close
         document.addEventListener('click', (event) => {
             const dropdown = document.querySelector('.dropdown-container');
             if (dropdown && !dropdown.contains(event.target)) {
@@ -79,10 +72,8 @@ class MemeUI {
             }
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
 
-        // Network status
         window.addEventListener('online', () => {
             this.showAlert('🌐 Connection restored!', 'success');
         });
@@ -91,15 +82,11 @@ class MemeUI {
             this.showAlert('🚫 No internet connection. Please check your network.', 'error');
         });
 
-        // Page visibility changes
         document.addEventListener('visibilitychange', () => {
             this.handleVisibilityChange();
         });
 
-        // Touch support for mobile
         this.setupTouchSupport();
-
-        // Easter egg
         this.setupEasterEgg();
     }
 
@@ -119,7 +106,6 @@ class MemeUI {
             button.classList.add('active');
         }
 
-        // Update ARIA attributes
         button.setAttribute('aria-expanded', !isActive);
     }
 
@@ -180,12 +166,10 @@ class MemeUI {
      * @param {number} duration - Duration in days
      */
     selectDuration(button, duration) {
-        // Remove active class from all buttons
         document.querySelectorAll('.duration-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         
-        // Add active class to selected button
         button.classList.add('active');
         this.selectedDuration = duration;
     }
@@ -204,11 +188,9 @@ class MemeUI {
             duration: this.selectedDuration 
         });
 
-        // Show loading overlay
         this.showLoading();
         
         try {
-            // Simulate progress for better UX
             await this.updateProgress(20, 'Fetching latest AI news...');
             await this.sleep(800);
             
@@ -220,17 +202,14 @@ class MemeUI {
             
             await this.updateProgress(80, 'Creating AI-powered memes...');
             
-            // Call API to generate memes
             const memes = await window.memeAPI.generateMemes(this.selectedTrends, this.selectedDuration);
             
             await this.updateProgress(100, 'Memes ready!');
             await this.sleep(500);
             
-            // Store results and switch to memes page
             this.generatedMemes = memes;
             this.showMemesPage();
             
-            // Show success message
             const successCount = memes.filter(m => m.success).length;
             this.showAlert(`🎉 Successfully generated ${successCount} memes!`, 'success');
             
@@ -249,10 +228,8 @@ class MemeUI {
         document.getElementById('landingPage').style.display = 'none';
         document.getElementById('memesPage').style.display = 'block';
         
-        // Render memes
         this.renderMemes();
         
-        // Scroll to top
         window.scrollTo(0, 0);
     }
 
@@ -263,7 +240,6 @@ class MemeUI {
         document.getElementById('memesPage').style.display = 'none';
         document.getElementById('landingPage').style.display = 'block';
         
-        // Scroll to top
         window.scrollTo(0, 0);
     }
 
@@ -298,7 +274,6 @@ class MemeUI {
                 `;
             }
 
-            // Clean the base64 data
             const cleanBase64 = meme.png_base64.replace(/\s/g, '').trim();
             
             return `
@@ -313,7 +288,6 @@ class MemeUI {
             `;
         }).join('');
 
-        // Setup lazy loading
         this.setupLazyLoading();
     }
 
@@ -382,7 +356,7 @@ class MemeUI {
         if (loadingText) loadingText.textContent = text;
         
         if (animate) {
-            return this.sleep(200); // Small delay for visual effect
+            return this.sleep(200);
         }
     }
 
@@ -391,7 +365,6 @@ class MemeUI {
      * @param {KeyboardEvent} e - Keyboard event
      */
     handleKeyboardShortcuts(e) {
-        // Press 'G' to generate memes
         if (e.key.toLowerCase() === 'g' && this.selectedTrends.length > 0) {
             const isLoading = !document.getElementById('loadingOverlay').classList.contains('hidden');
             if (!isLoading) {
@@ -399,18 +372,15 @@ class MemeUI {
             }
         }
         
-        // Press 'Escape' to close dropdown
         if (e.key === 'Escape') {
             this.closeDropdown();
         }
         
-        // Press 'Backspace' to go back from memes page
         if (e.key === 'Backspace' && document.getElementById('memesPage').style.display === 'block') {
             e.preventDefault();
             this.goBack();
         }
 
-        // Focus management for dropdown
         if (e.key === 'Enter' || e.key === ' ') {
             const activeElement = document.activeElement;
             if (activeElement && activeElement.classList.contains('dropdown-item')) {
@@ -427,12 +397,10 @@ class MemeUI {
         const spinners = document.querySelectorAll('.spinner');
         
         if (document.hidden) {
-            // Page is hidden, pause animations
             spinners.forEach(spinner => {
                 spinner.style.animationPlayState = 'paused';
             });
         } else {
-            // Page is visible, resume animations
             spinners.forEach(spinner => {
                 spinner.style.animationPlayState = 'running';
             });
@@ -453,7 +421,6 @@ class MemeUI {
             const touchEndY = e.changedTouches[0].clientY;
             const diff = touchStartY - touchEndY;
             
-            // Swipe up gesture to generate memes (mobile)
             if (diff > 100 && this.selectedTrends.length > 0) {
                 const landingPageVisible = document.getElementById('landingPage').style.display !== 'none';
                 if (landingPageVisible) {
@@ -531,8 +498,6 @@ class MemeUI {
      */
     trackEvent(eventName, properties = {}) {
         console.log(`📊 Event: ${eventName}`, properties);
-        // Replace with your analytics service
-        // analytics.track(eventName, properties);
     }
 
     /**
@@ -563,7 +528,7 @@ class MemeUI {
     }
 }
 
-// Create global UI instance - THIS IS CRITICAL!
+// Create global UI instance
 console.log('🎨 Creating global memeUI instance...');
 window.memeUI = new MemeUI();
 console.log('✅ window.memeUI created:', window.memeUI);
