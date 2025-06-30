@@ -4,35 +4,29 @@
 # ==============================================================================
 
 from openai import OpenAI
-from PIL import Image, ImageDraw, ImageFont
-import io
 import os
 import base64
 import json
-import random
-from typing import Dict, Any, List, Tuple
+from typing import List, Tuple
 
 from datetime import datetime
 
 from dotenv import load_dotenv
+from src.database import save_meme
 
-# Load environment variables
 load_dotenv()
 
-
-"""Generate memes using OpenAI gpt-image-1 and GPT-3.5"""
-
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)   
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))   
     
     
-def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
+def generate_meme_image( prompt_url_list: List[Tuple[str, str]], trends: List[str], duration: int, quality: str = "medium") -> str:
         """
             Generate memes from a list of (prompt, url) tuples
             
             Args:
                 prompt_url_list: List of tuples containing (meme_prompt, article_url)
+                trends: List of trends used for meme generation
+                duration: Duration in days for meme generation
                 
             Returns:
                 JSON string with meme results
@@ -49,9 +43,10 @@ def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
                     # Generate image using OpenAI
                     result = client.images.generate(
                         model="gpt-image-1",
-                        prompt=prompt + "RULES: Make text legible so that it shows in the image properly."
-                        # size="1024x1024",
-                        # response_format="b64_json"
+                        prompt=prompt + "RULES: Make text legible so that it shows in the image properly; ensure that all important text is within the image frame.",
+                        size="1024x1024",
+                        quality=quality,
+                        # moderation="low" # TODO: figure out how to reduce moderation from documentation
                     )
                     
                     # Get base64 image data
@@ -63,9 +58,11 @@ def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
                         "prompt": prompt,
                         "url": url,
                         "png_base64": png_base64,
+                        "trends_used": trends,
+                        "duration_days": duration,
                         "timestamp": datetime.now().isoformat()
                     }
-                    
+                    save_meme(meme_result)
                     results.append(meme_result)
                     print(f"✅ Successfully generated meme for prompt {i+1}")
                     
@@ -79,17 +76,18 @@ def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
                         "url": url,
                         "png_base64": "",
                         "error": str(e),
+                        "trends_used": trends,
+                        "duration_days": duration,
                         "timestamp": datetime.now().isoformat()
-                        
                     }
-                    
+                    save_meme(meme_result)
                     results.append(meme_result)
             
-            # Create final JSON response
+        successful_count = len([r for r in results if r["success"]])
         response = {
-                "success": True,
+                "success": successful_count > 0,
                 "total_count": len(prompt_url_list),
-                "successful_count": len([r for r in results if r["success"]]),
+                "successful_count": successful_count,
                 "failed_count": len([r for r in results if not r["success"]]),
                 "memes": results,
                 "generated_at": datetime.now().isoformat()
@@ -106,7 +104,7 @@ if __name__ == "__main__":
     ]
     
     # Generate and print results
-    result_json = generate_meme_image(test_prompts)
+    result_json = generate_meme_image(test_prompts, trends=["AI", "artificial intelligence", "machine learning"], duration=1)
     result = json.loads(result_json)
     
     print(f"\n:bar_chart: Results Summary:")

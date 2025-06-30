@@ -6,8 +6,11 @@
 from flask import Flask, render_template, request, jsonify
 import os
 import json
+import sys
+import argparse
 from datetime import datetime
 from dotenv import load_dotenv
+import click
 
 # Load environment variables
 load_dotenv()
@@ -15,7 +18,34 @@ load_dotenv()
 from src.news_aggregator import get_news_articles
 from src.filter_top_k import get_top_articles
 from src.prompt_generator import generate_meme_prompts
-from src.meme_generator_local import generate_meme_image
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='AI Meme Factory')
+parser.add_argument('--local', action='store_true', help='Use local Stable Diffusion instead of OpenAI')
+parser.add_argument('--port', type=int, default=5001, help='Port to run the server on')
+args = parser.parse_args()
+
+# Check environment variable as fallback
+if not args.local and os.getenv('MEME_MODE', '').lower() == 'local':
+    args.local = True
+
+# Dynamic import based on mode
+if args.local:
+    print("Running in LOCAL mode - using Stable Diffusion")
+    try:
+        from src.meme_generator_local import generate_meme_image
+        print("Successfully imported local meme generator")
+    except ImportError as e:
+        print("\nError: Missing dependencies for local mode!")
+        print("Please install the required packages:")
+        print("\n  pip install torch torchvision diffusers transformers accelerate pillow google-generativeai")
+        print("\nFor GPU support (recommended):")
+        print("  pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118")
+        print("\nThen try again with: python app.py --local")
+        sys.exit(1)
+else:
+    print("Running in CLOUD mode - using OpenAI API")
+    from src.meme_generator import generate_meme_image
 
 def create_app():
     app = Flask(__name__)
@@ -23,6 +53,21 @@ def create_app():
     # Configure static files for the separated frontend
     app.static_folder = 'static'
     app.static_url_path = '/static'
+    
+    # Add custom CLI commands
+    @app.cli.command()
+    @click.option('--port', default=5001, help='Port to run on')
+    def cloud(port):
+        """Run in cloud mode (OpenAI)"""
+        os.environ['FLASK_RUN_MODE'] = 'cloud'
+        app.run(debug=True, host='0.0.0.0', port=port)
+    
+    @app.cli.command()
+    @click.option('--port', default=5001, help='Port to run on')
+    def local(port):
+        """Run in local mode (Stable Diffusion)"""
+        os.environ['FLASK_RUN_MODE'] = 'local'
+        app.run(debug=True, host='0.0.0.0', port=port)
     
     @app.route('/')
     def index():
@@ -47,6 +92,7 @@ def create_app():
         """
         try:
             print("Starting meme generation...")
+            print(f"Mode: {'LOCAL' if args.local else 'CLOUD'}")
             
             data = request.get_json()
             
@@ -58,8 +104,9 @@ def create_app():
             
             trends = data.get('trends', [])
             duration = data.get('duration', 1)
+            memes = data.get('memes', 10)
             
-            print(f"Request: Trends={trends}, Duration={duration} days")
+            print(f"Request: Trends={trends}, Duration={duration} days, Memes={memes}")
             
             if not trends:
                 return jsonify({
@@ -77,7 +124,7 @@ def create_app():
                 })
             
             print(f"Filtering top articles from {len(articles)} total...")
-            top_articles = get_top_articles(articles, 10, trends)
+            top_articles = get_top_articles(articles, memes, trends)
             
             print("Generating prompts...")
             prompts = generate_meme_prompts(top_articles)
@@ -90,7 +137,7 @@ def create_app():
                 })
             
             print("Generating memes...")
-            memes = generate_meme_image(prompts)
+            memes = generate_meme_image(prompts, trends, duration)
             
             if isinstance(memes, str):
                 try:
@@ -104,33 +151,6 @@ def create_app():
                 parsed_memes = memes
 
             successful_memes = [meme for meme in parsed_memes["memes"] if meme.get("success", False)]
-            
-            print(f"Generated {len(successful_memes)} successful memes")
-            
-            if successful_memes:
-                try:
-                    os.makedirs("database", exist_ok=True)
-                    
-                    try:
-                        with open("database/memes.json", "r") as f:
-                            existing_memes = json.load(f)
-                    except (FileNotFoundError, json.JSONDecodeError):
-                        existing_memes = []
-                    
-                    for meme in successful_memes:
-                        meme['generated_at'] = datetime.now().isoformat()
-                        meme['trends_used'] = trends
-                        meme['duration_days'] = duration
-                    
-                    existing_memes.extend(successful_memes)
-                    
-                    with open("database/memes.json", "w") as f:
-                        json.dump(existing_memes, f, indent=2)
-                    
-                    print(f"Saved {len(successful_memes)} memes to database")
-                    
-                except Exception as e:
-                    print(f"Warning: Could not save memes: {e}")
             
             # Create filtered response with only successful memes
             filtered_response = {
@@ -246,29 +266,69 @@ if __name__ == '__main__':
     os.makedirs("database", exist_ok=True)
     
     app = create_app()
+    print("\n" + "="*60)
     print("Starting AI Meme Factory...")
-    print("Make sure to set your API keys in environment variables!")
+    print("="*60)
     
-    # Debug: Print actual API key (first few chars only)
-    news_key = os.getenv('NEWS_API_KEY')
-    if news_key:
-        print(f"News API Key: {news_key[:10]}...")
+    # Show mode
+    mode = "LOCAL (Stable Diffusion)" if args.local else "CLOUD (OpenAI)"
+    print(f"\nMode: {mode}")
     
-    print(f"News API Key configured: {'YES' if os.getenv('NEWS_API_KEY') != 'your-news-api-key-here' else 'NO'}")
-    print(f"OpenAI API Key configured: {'YES' if os.getenv('OPENAI_API_KEY') != 'your-openai-key-here' else 'NO'}")
-    print(f"Gemini API Key configured: {'YES' if os.getenv('GEMINI_API_KEY') != 'your-gemini-key-here' else 'NO'}")
+    # Check API keys based on mode
+    print("\nRequired API Keys:")
+    print(f"News API Key (FREE) configured: {'YES' if os.getenv('NEWS_API_KEY') and os.getenv('NEWS_API_KEY') != 'your-news-api-key-here' else 'NO'}")
+    print(f"Gemini API Key (FREE) configured: {'YES' if os.getenv('GEMINI_API_KEY') and os.getenv('GEMINI_API_KEY') != 'your-gemini-key-here' else 'NO'}")
+    
+    if args.local:
+        print("\nNote: Local mode uses Stable Diffusion for images")
+    else:
+        print(f"OpenAI API Key (PAID) configured: {'YES' if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'your-openai-key-here' else 'NO'}")
+        print("\nNote: Cloud mode costs money per image generated")
     
     print("\nServer Info:")
     print("Templates folder: templates/")
     print("   - index.html (main page)")
     print("   - history.html (previous generations)")
     print("Static files folder: static/")
-    print("Main page: http://localhost:5001")
-    print("History page: http://localhost:5001/history")
+    print(f"Main page: http://localhost:{args.port}")
+    print(f"History page: http://localhost:{args.port}/history")
     print("API endpoints:")
     print("   - POST /api/generate (generate memes)")
     print("   - GET  /api/memes (get existing memes)")
     print("   - GET  /api/news (get news preview)")
     print("   - GET  /api/health (health check)")
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Check required API keys and warn if missing
+    missing_keys = []
+    
+    # Always need news API and Gemini
+    if not os.getenv('NEWS_API_KEY') or os.getenv('NEWS_API_KEY') == 'your-news-api-key-here':
+        missing_keys.append('NEWS_API_KEY')
+    
+    if not os.getenv('GEMINI_API_KEY') or os.getenv('GEMINI_API_KEY') == 'your-gemini-key-here':
+        missing_keys.append('GEMINI_API_KEY')
+    
+    if not args.local:
+        # Cloud mode also needs OpenAI
+        if not os.getenv('OPENAI_API_KEY') or os.getenv('OPENAI_API_KEY') == 'your-openai-key-here':
+            missing_keys.append('OPENAI_API_KEY')
+    
+    if missing_keys:
+        print("\n" + "!"*60)
+        print("WARNING: Missing required API keys!")
+        print("!"*60)
+        print(f"\nMissing: {', '.join(missing_keys)}")
+        print("\nThe app will start but meme generation will fail.")
+        print("Please set these in your .env file.")
+        print("\nGet your API keys here:")
+        print("  NEWS_API_KEY: https://newsapi.org/ (FREE)")
+        print("  GEMINI_API_KEY: https://aistudio.google.com/apikey (FREE)")
+        if 'OPENAI_API_KEY' in missing_keys:
+            print("  OPENAI_API_KEY: https://platform.openai.com/settings/organization/api-keys (PAID)")
+        print("!"*60 + "\n")
+    
+    print("\n" + "="*60)
+    print("Server starting...")
+    print("="*60 + "\n")
+    
+    app.run(debug=True, host='0.0.0.0', port=args.port)

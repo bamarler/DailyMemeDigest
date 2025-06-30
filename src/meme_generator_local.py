@@ -15,7 +15,7 @@ from typing import List, Tuple, Dict
 from datetime import datetime
 from dotenv import load_dotenv
 import google.generativeai as genai
-
+from src.database import save_meme
 # Load environment variables
 load_dotenv()
 
@@ -257,7 +257,7 @@ def add_text_to_image(image: Image.Image, text_parts: Dict) -> Image.Image:
     return image
 
 
-def generate_meme_image(prompt_url_list: List[Tuple[str, str]]) -> str:
+def generate_meme_image(prompt_url_list: List[Tuple[str, str]], trends: List[str], duration: int) -> str:
     """
     Generate memes with proper text overlays.
     
@@ -325,9 +325,11 @@ def generate_meme_image(prompt_url_list: List[Tuple[str, str]]) -> str:
                 "url": url,
                 "png_base64": png_base64,
                 "timestamp": datetime.now().isoformat(),
+                "trends": trends,
+                "duration": duration,
                 "text_overlays": text_parts
             }
-            
+            save_meme(meme_result)
             results.append(meme_result)
             print(f"✅ Successfully generated meme {i+1}")
             
@@ -338,20 +340,24 @@ def generate_meme_image(prompt_url_list: List[Tuple[str, str]]) -> str:
             
         except Exception as e:
             print(f"❌ Failed: {e}")
-            results.append({
+            failed_meme_result = {
                 "success": False,
                 "prompt": prompt,
                 "url": url,
                 "png_base64": "",
                 "error": str(e),
+                "trends": trends,
+                "duration": duration,
                 "timestamp": datetime.now().isoformat()
-            })
-    
+            }
+            save_meme(failed_meme_result)
+            results.append(failed_meme_result)
+    successful_count = len([r for r in results if r["success"]])
     # Create response
     response = {
-        "success": True,
+        "success": successful_count > 0,
         "total_count": len(prompt_url_list),
-        "successful_count": len([r for r in results if r["success"]]),
+        "successful_count": successful_count,
         "failed_count": len([r for r in results if not r["success"]]),
         "memes": results,
         "generated_at": datetime.now().isoformat()

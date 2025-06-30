@@ -14,6 +14,7 @@ import os
 from typing import List, Dict, Tuple
 import google.generativeai as genai
 from dotenv import load_dotenv
+import random
 
 # Load environment variables
 load_dotenv()
@@ -40,7 +41,7 @@ def generate_meme_prompts(articles: List[Dict]) -> List[Tuple[str, str]]:
     if not articles:
         return []
     
-    meme_templates = load_meme_templates()
+    meme_templates = load_meme_templates(len(articles))
     print(f"found {len(meme_templates)} meme templates.")
     
     # Step 1: Get semantic matches between articles and memes
@@ -195,7 +196,7 @@ def generate_prompts_from_matches(enriched_articles: List[Dict]) -> List[str]:
     1. Create a prompt that specifically uses that meme format
     2. Include specific text overlays that reference the article content
     3. Make it topical, clever, and funny
-    4. Make the prompts detailed and accessible for an image generation agent to interpret it
+    4. Include a description of precisely what the meme looks like assuming that whoever reads it has NEVER seen the meme before.
     
     Output format: JSON array of prompt strings in the same order as input.
     Example: [
@@ -259,14 +260,14 @@ def prepare_article(article: Dict) -> Dict:
     }
 
 
-def load_meme_templates() -> List[Dict[str, str]]:
+def load_meme_templates(num_articles: int) -> List[Dict[str, str]]:
     """
     Load meme templates from JSON file.
     
     Returns:
         List of meme dictionaries with 'meme' field containing description
     """
-    with open('database/meme_templates.json', 'r') as f:
+    with open('database/meme_templates.json', 'r', encoding='utf-8') as f:
         templates = json.load(f)
         
     if not isinstance(templates, list):
@@ -276,7 +277,7 @@ def load_meme_templates() -> List[Dict[str, str]]:
         if not isinstance(template, dict) or 'meme' not in template:
             raise ValueError("Each meme template must have a 'meme' field")
             
-    return templates
+    return random.sample(templates, num_articles * 3)
 
 # Example usage
 if __name__ == "__main__":

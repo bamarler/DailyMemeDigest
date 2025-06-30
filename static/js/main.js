@@ -162,6 +162,12 @@ class MemeApp {
                     // Update UI to reflect saved duration
                     this.updateDurationUI(parsed.selectedDuration);
                 }
+                
+                if (parsed.selectedMemes) {
+                    window.memeUI.selectedMemes = parsed.selectedMemes;
+                    // Update UI to reflect saved memes
+                    this.updateMemesUI(parsed.selectedMemes);
+                }
             }
         } catch (error) {
             console.warn('Failed to load user preferences:', error);
@@ -176,6 +182,7 @@ class MemeApp {
             const preferences = {
                 selectedTrends: window.memeUI.selectedTrends,
                 selectedDuration: window.memeUI.selectedDuration,
+                memes: window.memeUI.selectedMemes,
                 savedAt: new Date().toISOString()
             };
             
@@ -194,6 +201,19 @@ class MemeApp {
         buttons.forEach(btn => {
             btn.classList.remove('active');
             if (parseInt(btn.getAttribute('data-duration')) === duration) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    /**
+     * Update memes UI based on saved preference
+     */
+    updateMemesUI(memes) {
+        const buttons = document.querySelectorAll('.memes-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (parseInt(btn.getAttribute('data-memes')) === memes) {
                 btn.classList.add('active');
             }
         });
@@ -234,6 +254,12 @@ class MemeApp {
         const originalSelectDuration = window.memeUI.selectDuration;
         window.memeUI.selectDuration = function(button, duration) {
             originalSelectDuration.call(this, button, duration);
+            window.memeApp.saveUserPreferences();
+        };
+
+        const originalSelectMemes = window.memeUI.selectMemes;
+        window.memeUI.selectMemes = function(button, memes) {
+            originalSelectMemes.call(this, button, memes);
             window.memeApp.saveUserPreferences();
         };
     }

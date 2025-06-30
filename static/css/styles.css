@@ -271,6 +271,40 @@ body {
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
+.memes-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.memes-btn {
+    padding: 18px 25px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.memes-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+}
+
+.memes-btn.active {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+
 .generate-btn {
     width: 100%;
     padding: 22px;
@@ -404,7 +438,7 @@ body {
 
 .meme-image {
     width: 100%;
-    height: auto;
+    height: 100%;
     object-fit: cover;
     border-radius: 20px;
     transition: all 0.3s ease;

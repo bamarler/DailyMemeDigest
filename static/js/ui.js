@@ -7,6 +7,7 @@ class MemeUI {
     constructor() {
         this.selectedTrends = [];
         this.selectedDuration = 1;
+        this.selectedMemes = 1;
         this.generatedMemes = [];
         
         console.log('🎨 MemeUI initializing...');
@@ -52,6 +53,14 @@ class MemeUI {
             btn.addEventListener('click', (e) => {
                 const duration = parseInt(e.target.getAttribute('data-duration'));
                 this.selectDuration(e.target, duration);
+            });
+        });
+
+        const memesButtons = document.querySelectorAll('.memes-btn');
+        memesButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memes = parseInt(e.target.getAttribute('data-memes'));
+                this.selectMemes(e.target, memes);
             });
         });
 
@@ -175,6 +184,20 @@ class MemeUI {
     }
 
     /**
+     * Select memes
+     * @param {HTMLElement} button - The clicked button
+     * @param {number} memes - Number of memes
+     */
+    selectMemes(button, memes) {
+        document.querySelectorAll('.memes-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        button.classList.add('active');
+        this.selectedMemes = memes;
+    }
+
+    /**
      * Handle meme generation
      */
     async handleGenerateMemes() {
@@ -185,24 +208,22 @@ class MemeUI {
 
         this.trackEvent('memes_generation_started', { 
             trends: this.selectedTrends,
-            duration: this.selectedDuration 
+            duration: this.selectedDuration,
+            memes: this.selectedMemes 
         });
 
         this.showLoading();
         
         try {
             await this.updateProgress(20, 'Fetching latest AI news...');
-            await this.sleep(800);
+            await this.sleep(1000);
             
             await this.updateProgress(40, 'Analyzing news articles with AI...');
-            await this.sleep(800);
+            await this.sleep(1000);
             
             await this.updateProgress(60, 'Generating meme prompts...');
-            await this.sleep(800);
             
-            await this.updateProgress(80, 'Creating AI-powered memes...');
-            
-            const memes = await window.memeAPI.generateMemes(this.selectedTrends, this.selectedDuration);
+            const memes = await window.memeAPI.generateMemes(this.selectedTrends, this.selectedDuration, this.selectedMemes);
             
             await this.updateProgress(100, 'Memes ready!');
             await this.sleep(500);

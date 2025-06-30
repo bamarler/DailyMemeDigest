@@ -13,9 +13,10 @@ class MemeAPI {
      * 
      * @param {Array} trends - Selected AI trends
      * @param {number} duration - Duration in days
+     * @param {number} memes - Number of memes
      * @returns {Promise<Array>} Generated memes
      */
-    async generateMemes(trends, duration) {
+    async generateMemes(trends, duration, memes) {
         try {
             const response = await fetch('/api/generate', {
                 method: 'POST',
@@ -24,7 +25,8 @@ class MemeAPI {
                 },
                 body: JSON.stringify({
                     trends: trends,
-                    duration: duration
+                    duration: duration,
+                    memes: memes
                 })
             });
             
