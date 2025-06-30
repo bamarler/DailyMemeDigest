@@ -1,156 +1,66 @@
-# 🎭 AI Meme Factory
+# AI Meme Factory
 
-> Turn the latest AI news into viral memes using GPT-powered humor!
+An AI-powered newsletter generator that makes staying informed fun and accessible. In today's fast-paced world, where attention spans are shrinking and information overload is common, young people often struggle to keep up with important news and developments. AI Meme Factory bridges this gap by transforming complex news articles into engaging memes, making it easier for everyone to stay informed about the latest trends and events.
 
-**Built for Sundai Club Hackathon** - designed to reach 1K users or $1K revenue in one week.
+Using cutting-edge AI technologies, the project generates memes that capture the essence of trending topics, helping users stay up-to-date with the state of the art in various fields. Choose between cloud mode (using OpenAI API) or local mode (using Stable Diffusion) for meme generation.
 
-## 🚀 Quick Start
+## Features
 
-### 1. Clone & Setup
-```bash
-git clone <your-repo>
-cd ai-meme-factory
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
+- 📰 Automated news article collection using NewsAPI
+- 🤖 AI-generated meme prompts based on trending topics
+- 🎨 High-quality meme generation using either OpenAI or Stable Diffusion
+- 📊 Real-time analytics and database tracking
+- 🌐 Two operating modes: Cloud (OpenAI) or Local (Stable Diffusion)
+- 🔄 Dynamic meme generation based on current news
 
-### 2. Get API Keys
-- **OpenAI**: https://platform.openai.com/api-keys
-- **News API**: https://newsapi.org/ (free - 100 requests/day)
+## Getting Started
 
-### 3. Configure Environment
-```bash
-# Copy and edit .env file
-cp .env.example .env
-# Add your API keys to .env
-```
+Detailed setup and running instructions are available in the [RUN.md](RUN.md) file.
 
-### 4. Run the App
-```bash
-python app.py
-# Visit: http://localhost:5000
-```
+## Requirements
 
-## 📁 Project Structure
+### Common Requirements
+- Python 3.8+
+- NEWS_API_KEY (Free from https://newsapi.org/)
+- GEMINI_API_KEY (Free from https://aistudio.google.com/apikey)
 
-```
-ai-meme-factory/
-├── app.py                    # Main Flask application
-├── src/                      # Source code modules
-│   ├── config.py            # Configuration settings
-│   ├── models.py            # Data models
-│   ├── database.py          # Database operations
-│   ├── news_aggregator.py   # News fetching
-│   ├── meme_generator.py    # AI meme generation
-│   └── utils.py             # Utility functions
-├── templates/               # HTML templates
-│   ├── base.html           # Base template
-│   ├── index.html          # Main page
-│   └── components/         # Reusable components
-├── static/                 # Static assets
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript
-│   └── images/            # Images
-├── tests/                 # Test files
-└── scripts/               # Utility scripts
-```
+### Cloud Mode (Default)
+- OPENAI_API_KEY (Paid from https://platform.openai.com/settings/organization/api-keys)
 
-## ✨ Features
+### Local Mode
+- Stable Diffusion dependencies (see RUN.md)
+- GPU recommended for better performance
 
-- 🤖 **Full AI Pipeline**: GPT text generation + gpt-image-1 image creation
-- 📰 **Live News Integration**: Real AI news from major tech publications
-- 🎭 **6 Meme Templates**: Drake, Expanding Brain, Distracted Boyfriend, etc.
-- 🗳️ **Community Voting**: Upvote the best memes
-- 📱 **Mobile Responsive**: Works on all devices
-- 🚀 **Production Ready**: Deployed on Heroku
+## Project Structure
 
-## 🛠️ Tech Stack
+- `app.py` - Main Flask application
+- `src/` - Core functionality
+  - `news_aggregator.py` - News collection
+  - `filter_top_k.py` - Article filtering
+  - `prompt_generator.py` - Meme prompt generation
+  - `meme_generator.py` - Cloud meme generation
+  - `meme_generator_local.py` - Local meme generation
+- `database/` - Data storage
 
-- **Backend**: Python Flask
-- **AI**: OpenAI gpt-image-1 + GPT-3.5-turbo
-- **News**: NewsAPI.org
-- **Database**: SQLite
-- **Frontend**: HTML/CSS/JS
-- **Deployment**: Heroku
+## Running the Application
 
-## 💰 Business Model
+See [RUN.md](RUN.md) for detailed running instructions.
 
-1. **Premium Templates** ($2.99/month)
-2. **API Access** ($0.10/meme)
-3. **Sponsored Memes** ($50-200/meme)
-4. **Pro Analytics** ($9.99/month)
+## Contributing
 
-## 🎯 Demo Script
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-**Opening**: "What if AI could create memes about AI?"
-**Demo**: Live generation from real news
-**Business**: Clear monetization + viral potential
-**Technical**: Production-ready, scalable architecture
+## License
 
-## 🚀 Deployment
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-```bash
-# Heroku
-heroku create ai-meme-factory
-heroku# ==============================================================================
-# PROJECT STRUCTURE
-# ==============================================================================
+## Acknowledgments
 
-ai-meme-factory/
-│
-├── 📁 Root Configuration
-│   ├── app.py                      # Main Flask application
-│   ├── requirements.txt            # Python dependencies
-│   ├── .env                        # Environment variables
-│   ├── .gitignore                 # Git ignore rules
-│   ├── README.md                  # Project documentation
-│   ├── Procfile                   # Heroku deployment
-│   ├── app.json                   # Heroku one-click deploy
-│   └── run.sh                     # Development startup script
-│
-├── 📁 src/                        # Source code modules
-│   ├── __init__.py                # Package initialization
-│   ├── config.py                  # Configuration settings
-│   ├── models.py                  # Data models
-│   ├── database.py                # Database operations
-│   ├── news_aggregator.py         # News fetching logic
-│   ├── meme_generator.py          # AI meme generation
-│   └── utils.py                   # Utility functions
-│
-├── 📁 templates/                  # HTML templates
-│   ├── base.html                  # Base template
-│   ├── index.html                 # Main page
-│   └── components/                # Reusable components
-│       ├── header.html            # Header component
-│       ├── news_ticker.html       # News display
-│       └── meme_card.html         # Meme display card
-│
-├── 📁 static/                     # Static assets
-│   ├── 📁 css/
-│   │   ├── main.css               # Main styles
-│   │   └── components.css         # Component styles
-│   ├── 📁 js/
-│   │   ├── main.js                # Main JavaScript
-│   │   ├── meme_generator.js      # Meme generation logic
-│   │   └── news_display.js        # News display logic
-│   └── 📁 images/
-│       ├── logo.png               # App logo
-│       └── favicon.ico            # Favicon
-│
-├── 📁 tests/                      # Test files
-│   ├── __init__.py
-│   ├── test_app.py                # App tests
-│   ├── test_meme_generator.py     # Meme generation tests
-│   ├── test_news_aggregator.py    # News aggregation tests
-│   └── test_database.py           # Database tests
-│
-├── 📁 scripts/                    # Utility scripts
-│   ├── setup_project.py           # Automated setup
-│   ├── test_apis.py               # API testing
-│   └── deploy.py                  # Deployment script
-│
-└── 📁 docs/                       # Documentation
-    ├── API.md                     # API documentation
-    ├── DEPLOYMENT.md              # Deployment guide
-    └── DEMO.md                    # Demo script
+- NewsAPI for news aggregation
+- OpenAI for cloud meme generation
+- Stable Diffusion for local meme generation
+- Google Gemini for AI assistance
