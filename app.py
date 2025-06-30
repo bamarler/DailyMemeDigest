@@ -101,7 +101,7 @@ load_dotenv()
 from src.news_aggregator import get_news_articles
 from src.filter_top_k import get_top_articles
 from src.prompt_generator import generate_meme_prompts
-from src.meme_generator import generate_meme_image
+from src.meme_generator_local import generate_meme_image
 
 def create_app():
     app = Flask(__name__)
@@ -117,11 +117,18 @@ def create_app():
     
     @app.route('/api/generate', methods=['POST'])
     def generate_meme():
-        """Generate memes based on user preferences"""
+        """
+        Generate memes based on user preferences
+        
+        Parameters:
+        - JSON body with 'trends' (list) and 'duration' (int)
+        
+        Returns:
+        - JSON response with generated memes (only successful ones)
+        """
         try:
             print("🎲 Starting meme generation...")
             
-            # Get JSON data from request body
             data = request.get_json()
             
             if not data:
@@ -130,9 +137,8 @@ def create_app():
                     'error': 'No data provided'
                 }), 400
             
-            # Extract fields with defaults
-            trends = data.get('trends', [])  # List of keywords
-            duration = data.get('duration', 1)  # Days back, default to 1
+            trends = data.get('trends', [])
+            duration = data.get('duration', 1)
             
             print(f"📊 Request: Trends={trends}, Duration={duration} days")
             
@@ -142,7 +148,6 @@ def create_app():
                     'error': 'Please select at least one AI trend'
                 }), 400
             
-            # Call your methods with the extracted data
             print("📰 Fetching articles...")
             articles = get_news_articles(trends, days_back=duration)
             
@@ -153,7 +158,7 @@ def create_app():
                 })
             
             print(f"🎯 Filtering top articles from {len(articles)} total...")
-            top_articles = get_top_articles(articles, 2, trends)
+            top_articles = get_top_articles(articles, 10, trends)
             
             print("💭 Generating prompts...")
             prompts = generate_meme_prompts(top_articles)
@@ -168,7 +173,6 @@ def create_app():
             print("🎨 Generating memes...")
             memes = generate_meme_image(prompts)
             
-            # Handle both string and dict responses from generate_meme_image
             if isinstance(memes, str):
                 try:
                     parsed_memes = json.loads(memes)
@@ -180,34 +184,27 @@ def create_app():
             else:
                 parsed_memes = memes
 
-            # Filter successful memes
             successful_memes = [meme for meme in parsed_memes["memes"] if meme.get("success", False)]
             
             print(f"✅ Generated {len(successful_memes)} successful memes")
             
-            # Store successful memes
             if successful_memes:
                 try:
-                    # Create database directory if needed
                     os.makedirs("database", exist_ok=True)
                     
-                    # Read existing memes
                     try:
                         with open("database/memes.json", "r") as f:
                             existing_memes = json.load(f)
                     except (FileNotFoundError, json.JSONDecodeError):
                         existing_memes = []
                     
-                    # Add metadata to new memes
                     for meme in successful_memes:
                         meme['generated_at'] = datetime.now().isoformat()
                         meme['trends_used'] = trends
                         meme['duration_days'] = duration
                     
-                    # Append new memes
                     existing_memes.extend(successful_memes)
                     
-                    # Write back
                     with open("database/memes.json", "w") as f:
                         json.dump(existing_memes, f, indent=2)
                     
@@ -216,13 +213,15 @@ def create_app():
                 except Exception as e:
                     print(f"⚠️ Warning: Could not save memes: {e}")
             
-            # Return the response in expected format
-            if isinstance(memes, str):
-                # If memes is JSON string, parse and return
-                return memes, 200, {'Content-Type': 'application/json'}
-            else:
-                # If memes is dict, return as JSON
-                return jsonify(memes)
+            # Create filtered response with only successful memes
+            filtered_response = {
+                "success": True,
+                "memes": successful_memes,
+                "total_generated": len(parsed_memes.get("memes", [])),
+                "successful_count": len(successful_memes)
+            }
+            
+            return jsonify(filtered_response)
                 
         except Exception as e:
             print(f"❌ Error in meme generation: {str(e)}")
