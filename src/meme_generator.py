@@ -49,7 +49,7 @@ def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
                     # Generate image using OpenAI
                     result = client.images.generate(
                         model="gpt-image-1",
-                        prompt=prompt
+                        prompt=prompt + "RULES: Make text legible so that it shows in the image properly."
                         # size="1024x1024",
                         # response_format="b64_json"
                     )
@@ -98,4 +98,28 @@ def generate_meme_image( prompt_url_list: List[Tuple[str, str]]) -> str:
         print(f"\n🎉 Generation complete! {response['successful_count']}/{response['total_count']} successful")
             
         return json.dumps(response, indent=2)
+
+if __name__ == "__main__":
+    # Test with sample prompts
+    test_prompts = [
+        ("Create a 'Hard to swallow pills' meme. Top panel: hands holding a 'Hard to swallow pills' bottle, label reads '40% of AI Agent Projects Canceled By 2027'. Bottom panel: hand holding two pills labeled 'AI Hype' and 'Reality'", "https://example.com/article1"),
+    ]
+    
+    # Generate and print results
+    result_json = generate_meme_image(test_prompts)
+    result = json.loads(result_json)
+    
+    print(f"\n:bar_chart: Results Summary:")
+    print(f"   Total: {result['total_count']}")
+    print(f"   Successful: {result['successful_count']}")
+    print(f"   Failed: {result['failed_count']}")
+    
+    # Optionally save first successful image for viewing
+    for meme in result['memes']:
+        if meme['success']:
+            img_data = base64.b64decode(meme['png_base64'])
+            with open("test_meme.png", "wb") as f:
+                f.write(img_data)
+            print(f"\n:frame_photo: Test image saved as test_meme.png")
+            break
 

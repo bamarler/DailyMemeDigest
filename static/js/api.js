@@ -1,0 +1,112 @@
+/**
+ * API handling for AI Meme Newsletter
+ * Handles all communication with Flask backend
+ */
+
+class MemeAPI {
+    constructor() {
+        this.baseURL = '';  // Same origin
+    }
+
+    /**
+     * Generate memes from selected trends and duration
+     * @param {Array} trends - Selected AI trends
+     * @param {number} duration - Duration in days
+     * @returns {Promise<Array>} Generated memes
+     */
+    async generateMemes(trends, duration) {
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    trends: trends,
+                    duration: duration
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to generate memes');
+            }
+            
+            return data.memes;
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get existing memes from the database
+     * @param {string} sortBy - Sort order ('recent' or 'popular')
+     * @param {number} limit - Number of memes to retrieve
+     * @returns {Promise<Array>} Existing memes
+     */
+    async getMemes(sortBy = 'recent', limit = 20) {
+        try {
+            const response = await fetch(`/api/memes?sort=${sortBy}&limit=${limit}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.memes || [];
+        } catch (error) {
+            console.error('Error fetching memes:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get recent news articles
+     * @param {number} duration - Duration in days
+     * @returns {Promise<Array>} News articles
+     */
+    async getNews(duration = 1) {
+        try {
+            const response = await fetch(`/api/news?duration=${duration}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.news || [];
+        } catch (error) {
+            console.error('Error fetching news:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Health check endpoint
+     * @returns {Promise<Object>} Health status
+     */
+    async healthCheck() {
+        try {
+            const response = await fetch('/api/health');
+            return await response.json();
+        } catch (error) {
+            console.error('Health check failed:', error);
+            return { status: 'error', error: error.message };
+        }
+    }
+}
+
+// Create global API instance
+window.memeAPI = new MemeAPI();
+
+// Export for module usage if needed
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MemeAPI;
+}

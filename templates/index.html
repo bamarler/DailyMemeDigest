@@ -404,7 +404,7 @@
 
         .meme-image {
             width: 100%;
-            height: 400px;
+            height: auto;
             object-fit: cover;
             border-radius: 20px;
             transition: all 0.3s ease;
@@ -607,6 +607,28 @@
         ::selection {
             background: rgba(102, 126, 234, 0.3);
         }
+
+        /* Image loading states */
+        .meme-image {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .meme-image.loaded {
+            opacity: 1;
+        }
+
+        /* Animation for entrance */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -624,23 +646,23 @@
                     <p>Choose the AI topics you want personalized memes about</p>
                     
                     <div class="dropdown-container">
-                        <button class="dropdown-button" onclick="toggleDropdown()" id="dropdownButton">
+                        <button class="dropdown-button" id="dropdownButton">
                             <span>Select AI Trends...</span>
                             <span class="dropdown-arrow">▼</span>
                         </button>
                         <div class="dropdown-menu" id="dropdownMenu">
-                            <div class="dropdown-item" onclick="selectTrend('OpenAI GPT-5')">🤖 OpenAI GPT-5</div>
-                            <div class="dropdown-item" onclick="selectTrend('Google Gemini')">🔍 Google Gemini</div>
-                            <div class="dropdown-item" onclick="selectTrend('Anthropic Claude')">🧠 Anthropic Claude</div>
-                            <div class="dropdown-item" onclick="selectTrend('AI Agents')">🤵 AI Agents</div>
-                            <div class="dropdown-item" onclick="selectTrend('Autonomous AI')">🚗 Autonomous AI</div>
-                            <div class="dropdown-item" onclick="selectTrend('AI Coding Tools')">💻 AI Coding Tools</div>
-                            <div class="dropdown-item" onclick="selectTrend('Multimodal AI')">🎨 Multimodal AI</div>
-                            <div class="dropdown-item" onclick="selectTrend('AI Hardware')">⚡ AI Hardware</div>
-                            <div class="dropdown-item" onclick="selectTrend('AI Safety')">🛡️ AI Safety</div>
-                            <div class="dropdown-item" onclick="selectTrend('AGI Development')">🌟 AGI Development</div>
-                            <div class="dropdown-item" onclick="selectTrend('Machine Learning')">📊 Machine Learning</div>
-                            <div class="dropdown-item" onclick="selectTrend('Neural Networks')">🧮 Neural Networks</div>
+                            <div class="dropdown-item" data-trend="OpenAI GPT-5">🤖 OpenAI GPT-5</div>
+                            <div class="dropdown-item" data-trend="Google Gemini">🔍 Google Gemini</div>
+                            <div class="dropdown-item" data-trend="Anthropic Claude">🧠 Anthropic Claude</div>
+                            <div class="dropdown-item" data-trend="AI Agents">🤵 AI Agents</div>
+                            <div class="dropdown-item" data-trend="Autonomous AI">🚗 Autonomous AI</div>
+                            <div class="dropdown-item" data-trend="AI Coding Tools">💻 AI Coding Tools</div>
+                            <div class="dropdown-item" data-trend="Multimodal AI">🎨 Multimodal AI</div>
+                            <div class="dropdown-item" data-trend="AI Hardware">⚡ AI Hardware</div>
+                            <div class="dropdown-item" data-trend="AI Safety">🛡️ AI Safety</div>
+                            <div class="dropdown-item" data-trend="AGI Development">🌟 AGI Development</div>
+                            <div class="dropdown-item" data-trend="Machine Learning">📊 Machine Learning</div>
+                            <div class="dropdown-item" data-trend="Neural Networks">🧮 Neural Networks</div>
                         </div>
                     </div>
 
@@ -654,22 +676,22 @@
                     <p>How recent should the AI news be for meme generation?</p>
                     
                     <div class="duration-buttons">
-                        <button class="duration-btn active" data-duration="1" onclick="selectDuration(this, 1)">
+                        <button class="duration-btn active" data-duration="1">
                             📅 Today
                         </button>
-                        <button class="duration-btn" data-duration="3" onclick="selectDuration(this, 3)">
+                        <button class="duration-btn" data-duration="3">
                             📅 3 Days
                         </button>
-                        <button class="duration-btn" data-duration="7" onclick="selectDuration(this, 7)">
+                        <button class="duration-btn" data-duration="7">
                             📅 1 Week
                         </button>
-                        <button class="duration-btn" data-duration="30" onclick="selectDuration(this, 30)">
+                        <button class="duration-btn" data-duration="30">
                             📅 1 Month
                         </button>
                     </div>
                 </div>
 
-                <button class="generate-btn" onclick="generateMemes()" id="generateBtn">
+                <button class="generate-btn" id="generateBtn">
                     🚀 Generate AI Memes
                 </button>
             </div>
@@ -677,7 +699,7 @@
 
         <!-- Memes Page -->
         <div class="memes-page" id="memesPage">
-            <button class="back-btn" onclick="goBack()">← Back to Generator</button>
+            <button class="back-btn" id="backBtn">← Back to Generator</button>
             
             <div class="memes-header">
                 <h2>🎭 Your AI Meme Newsletter</h2>
@@ -703,447 +725,32 @@
         </div>
     </div>
 
+    <!-- Load JavaScript modules in correct order -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/main.js"></script>
+    
+    <!-- Ensure proper initialization order -->
     <script>
-        // Global state
-        let selectedTrends = [];
-        let selectedDuration = 1;
-        let generatedMemes = [];
-
-        // Dropdown functionality
-        function toggleDropdown() {
-            const menu = document.getElementById('dropdownMenu');
-            const button = document.getElementById('dropdownButton');
-            const isActive = menu.classList.contains('active');
-            
-            if (isActive) {
-                menu.classList.remove('active');
-                button.classList.remove('active');
-            } else {
-                menu.classList.add('active');
-                button.classList.add('active');
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.querySelector('.dropdown-container');
-            if (!dropdown.contains(event.target)) {
-                document.getElementById('dropdownMenu').classList.remove('active');
-                document.getElementById('dropdownButton').classList.remove('active');
-            }
-        });
-
-        // Select trend from dropdown
-        function selectTrend(trend) {
-            if (!selectedTrends.includes(trend)) {
-                selectedTrends.push(trend);
-                updateSelectedTags();
-            }
-            document.getElementById('dropdownMenu').classList.remove('active');
-            document.getElementById('dropdownButton').classList.remove('active');
-        }
-
-        // Remove trend
-        function removeTrend(trend) {
-            selectedTrends = selectedTrends.filter(t => t !== trend);
-            updateSelectedTags();
-        }
-
-        // Update selected tags display
-        function updateSelectedTags() {
-            const container = document.getElementById('selectedTags');
-            container.innerHTML = selectedTrends.map(trend => 
-                `<div class="tag">
-                    ${trend}
-                    <span class="remove" onclick="removeTrend('${trend.replace(/'/g, "\\'")}')">×</span>
-                </div>`
-            ).join('');
-        }
-
-        // Select duration
-        function selectDuration(button, duration) {
-            // Remove active class from all buttons
-            document.querySelectorAll('.duration-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to selected button
-            button.classList.add('active');
-            selectedDuration = duration;
-        }
-
-        // Show alert messages
-        function showAlert(message, type = 'success') {
-            const alert = document.createElement('div');
-            alert.className = `alert ${type}`;
-            alert.textContent = message;
-            document.body.appendChild(alert);
-            
-            setTimeout(() => alert.classList.add('show'), 100);
-            setTimeout(() => {
-                alert.classList.remove('show');
-                setTimeout(() => alert.remove(), 300);
-            }, 5000);
-        }
-
-        // Actual API call to Flask backend
-        async function callActualAPI() {
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    trends: selectedTrends,
-                    duration: selectedDuration
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to generate memes');
-            }
-            
-            return data.memes;
-        }
-
-        // Generate memes
-        async function generateMemes() {
-            if (selectedTrends.length === 0) {
-                showAlert('Please select at least one AI trend!', 'warning');
+        // Wait for all scripts to load before initializing
+        document.addEventListener('DOMContentLoaded', () => {
+            // Double-check dependencies are loaded
+            if (typeof window.memeAPI === 'undefined') {
+                console.error('❌ memeAPI not loaded');
                 return;
             }
-
-            // Show loading overlay
-            showLoading();
-            
-            try {
-                // Simulate progress for better UX
-                updateProgress(20, 'Fetching latest AI news...');
-                await sleep(800);
-                
-                updateProgress(40, 'Analyzing news articles with AI...');
-                await sleep(800);
-                
-                updateProgress(60, 'Generating meme prompts...');
-                await sleep(800);
-                
-                updateProgress(80, 'Creating AI-powered memes...');
-                
-                // Call actual API
-                const memes = await callActualAPI();
-                
-                updateProgress(100, 'Memes ready!');
-                await sleep(500);
-                
-                // Store results and switch to memes page
-                generatedMemes = memes;
-                showMemesPage();
-                
-                // Show success message
-                const successCount = memes.filter(m => m.success).length;
-                showAlert(`🎉 Successfully generated ${successCount} memes!`, 'success');
-                
-            } catch (error) {
-                console.error('Error generating memes:', error);
-                showAlert(`Failed to generate memes: ${error.message}`, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Show memes page
-        function showMemesPage() {
-            document.getElementById('landingPage').style.display = 'none';
-            document.getElementById('memesPage').style.display = 'block';
-            
-            // Render memes
-            renderMemes();
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-        }
-
-        // Render memes
-        function renderMemes() {
-            const container = document.getElementById('memesGrid');
-            
-            if (generatedMemes.length === 0) {
-                container.innerHTML = `
-                    <div class="error-card">
-                        <div class="error-content">
-                            <h3>🤔 No Memes Generated</h3>
-                            <p>Try selecting different trends or adjusting the time duration.</p>
-                        </div>
-                    </div>
-                `;
+            if (typeof window.memeUI === 'undefined') {
+                console.error('❌ memeUI not loaded');
                 return;
             }
             
-            container.innerHTML = generatedMemes.map((meme, index) => {
-                if (!meme.success) {
-                    return `
-                        <div class="error-card">
-                            <div class="error-content">
-                                <h3>❌ Generation Failed</h3>
-                                <p>${meme.error || 'Unknown error occurred'}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="meme-card" onclick="openMemeLink('${meme.url}')" title="Click to view source article">
-                        <img src="data:image/png;base64,${meme.png_base64}" 
-                             alt="AI Generated Meme about ${meme.prompt}" 
-                             class="meme-image"
-                             loading="lazy"
-                             onerror="this.parentElement.innerHTML='<div class=\\'error-card\\'><div class=\\'error-content\\'><h3>🖼️ Image Error</h3><p>Failed to load meme image</p></div></div>'">
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Open meme link
-        function openMemeLink(url) {
-            if (url && url !== 'https://example.com') {
-                window.open(url, '_blank', 'noopener,noreferrer');
-            }
-        }
-
-        // Go back to landing page
-        function goBack() {
-            document.getElementById('memesPage').style.display = 'none';
-            document.getElementById('landingPage').style.display = 'block';
+            console.log('✅ All dependencies loaded, initializing app...');
             
-            // Scroll to top
-            window.scrollTo(0, 0);
-        }
-
-        // Loading functions
-        function showLoading() {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            updateProgress(0, 'Ready to generate...');
-        }
-
-        function updateProgress(percent, text) {
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('progressText').textContent = percent + '% Complete';
-            document.getElementById('loadingText').textContent = text;
-        }
-
-        // Utility function
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // Handle keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Press 'G' to generate memes
-            if (e.key.toLowerCase() === 'g' && !document.getElementById('loadingOverlay').classList.contains('hidden') === false) {
-                if (selectedTrends.length > 0) {
-                    generateMemes();
-                }
-            }
-            
-            // Press 'Escape' to close dropdown
-            if (e.key === 'Escape') {
-                document.getElementById('dropdownMenu').classList.remove('active');
-                document.getElementById('dropdownButton').classList.remove('active');
-            }
-            
-            // Press 'Backspace' to go back from memes page
-            if (e.key === 'Backspace' && document.getElementById('memesPage').style.display === 'block') {
-                e.preventDefault();
-                goBack();
+            // Initialize the app if not already done
+            if (window.memeApp && !window.memeApp.isInitialized) {
+                window.memeApp.init();
             }
         });
-
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Page is hidden, pause any animations
-                document.querySelectorAll('.spinner').forEach(spinner => {
-                    spinner.style.animationPlayState = 'paused';
-                });
-            } else {
-                // Page is visible, resume animations
-                document.querySelectorAll('.spinner').forEach(spinner => {
-                    spinner.style.animationPlayState = 'running';
-                });
-            }
-        });
-
-        // Add some Easter eggs
-        let clickCount = 0;
-        document.querySelector('.header h1').addEventListener('click', function() {
-            clickCount++;
-            if (clickCount === 5) {
-                showAlert('🎭 You found the Easter egg! You really love AI memes!', 'success');
-                clickCount = 0;
-            }
-        });
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎭 AI Meme Newsletter initialized');
-            
-            // Add some welcome animation
-            setTimeout(() => {
-                document.querySelector('.header').style.animation = 'fadeInUp 0.8s ease';
-                document.querySelector('.form-container').style.animation = 'fadeInUp 0.8s ease 0.2s both';
-            }, 100);
-        });
-
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Performance optimization: Lazy load images
-        function setupLazyLoading() {
-            const images = document.querySelectorAll('img[loading="lazy"]');
-            
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            img.classList.add('fade-in');
-                            observer.unobserve(img);
-                        }
-                    });
-                });
-
-                images.forEach(img => imageObserver.observe(img));
-            }
-        }
-
-        // Call lazy loading setup when memes are rendered
-        const originalRenderMemes = renderMemes;
-        renderMemes = function() {
-            originalRenderMemes();
-            setupLazyLoading();
-        };
-
-        // Add error handling for network issues
-        window.addEventListener('online', () => {
-            showAlert('🌐 Connection restored!', 'success');
-        });
-
-        window.addEventListener('offline', () => {
-            showAlert('🚫 No internet connection. Please check your network.', 'error');
-        });
-
-        // Add smooth fade-in for loaded images
-        const imageStyle = document.createElement('style');
-        imageStyle.textContent = `
-            .meme-image {
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-            
-            .meme-image.loaded {
-                opacity: 1;
-            }
-        `;
-        document.head.appendChild(imageStyle);
-
-        // Handle image load events
-        document.addEventListener('load', function(e) {
-            if (e.target.classList.contains('meme-image')) {
-                e.target.classList.add('loaded');
-            }
-        }, true);
-
-        // Add touch support for mobile
-        let touchStartY = 0;
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchend', function(e) {
-            const touchEndY = e.changedTouches[0].clientY;
-            const diff = touchStartY - touchEndY;
-            
-            // Swipe up gesture to generate memes (mobile)
-            if (diff > 100 && selectedTrends.length > 0 && document.getElementById('landingPage').style.display !== 'none') {
-                generateMemes();
-            }
-        });
-
-        // Add analytics tracking (you can replace with your analytics)
-        function trackEvent(eventName, properties = {}) {
-            console.log(`📊 Event: ${eventName}`, properties);
-            // Replace with your analytics service
-            // analytics.track(eventName, properties);
-        }
-
-        // Track user interactions
-        const originalSelectTrend = selectTrend;
-        selectTrend = function(trend) {
-            trackEvent('trend_selected', { trend });
-            originalSelectTrend(trend);
-        };
-
-        const originalGenerateMemes = generateMemes;
-        generateMemes = function() {
-            trackEvent('memes_generation_started', { 
-                trends: selectedTrends,
-                duration: selectedDuration 
-            });
-            originalGenerateMemes();
-        };
-
-        // Add accessibility improvements
-        document.addEventListener('keydown', function(e) {
-            // Focus management for dropdown
-            if (e.key === 'Enter' || e.key === ' ') {
-                const activeElement = document.activeElement;
-                if (activeElement.classList.contains('dropdown-item')) {
-                    e.preventDefault();
-                    activeElement.click();
-                }
-            }
-        });
-
-        // Add ARIA labels and roles for better accessibility
-        document.getElementById('dropdownButton').setAttribute('aria-expanded', 'false');
-        document.getElementById('dropdownButton').setAttribute('aria-haspopup', 'listbox');
-        document.getElementById('dropdownMenu').setAttribute('role', 'listbox');
-        
-        document.querySelectorAll('.dropdown-item').forEach(item => {
-            item.setAttribute('role', 'option');
-            item.setAttribute('tabindex', '0');
-        });
-
-        // Update ARIA attributes when dropdown state changes
-        const originalToggleDropdown = toggleDropdown;
-        toggleDropdown = function() {
-            originalToggleDropdown();
-            const isOpen = document.getElementById('dropdownMenu').classList.contains('active');
-            document.getElementById('dropdownButton').setAttribute('aria-expanded', isOpen);
-        };
     </script>
 </body>
 </html>
