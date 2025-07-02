@@ -44,11 +44,13 @@ class HistoryPage {
         this.showLoading();
         
         try {
-            const data = await window.memeAPI.getMemes('recent', 0);
+            const data = await window.memeAPI.getMemes();
             
             if (data.success && data.memes) {
-                this.allMemes = data.memes;
-                console.log(`Loaded ${this.allMemes.length} memes`);
+                this.allMemes = data.memes.sort((a, b) => {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+                console.log(`Loaded ${this.allMemes.length} memes, sorted by timestamp`);
             } else {
                 console.error('Invalid response:', data);
                 this.allMemes = [];
