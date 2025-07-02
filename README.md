@@ -1,8 +1,12 @@
 # AI Meme Newsletter
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/b0e7959c-4afe-4c4e-a7ff-07d319285617" href="https://biztoc.com/x/4fe02456f08c6d1b" width="33%" />
-  <img src="https://github.com/user-attachments/assets/cdfc194a-2667-4190-876b-675417f32732" href="https://www.makeuseof.com/free-ai-image-generator-imagefx/" width="33%" />
-  <img src="https://github.com/user-attachments/assets/193d82f5-aa13-4df5-9640-100b42911b99" width="33%" />
+  <a href="https://biztoc.com/x/4fe02456f08c6d1b">
+    <img src="https://github.com/user-attachments/assets/b0e7959c-4afe-4c4e-a7ff-07d319285617" width="30%" />
+  </a>&nbsp;&nbsp;
+  <a href="https://www.makeuseof.com/free-ai-image-generator-imagefx/">
+    <img src="https://github.com/user-attachments/assets/cdfc194a-2667-4190-876b-675417f32732" width="30%" />
+  </a>&nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/193d82f5-aa13-4df5-9640-100b42911b99" width="30%" />
 </p>
 
 An AI-powered newsletter generator that makes staying informed fun and accessible. In today's fast-paced world, where attention spans are shrinking and information overload is common, young people often struggle to keep up with important news and developments. AI Meme Factory bridges this gap by transforming complex news articles into engaging memes, making it easier for everyone to stay informed about the latest trends and events.
