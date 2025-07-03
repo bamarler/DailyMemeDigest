@@ -48,27 +48,38 @@ class MailchimpService:
             Dict: Response with success status and message
         """
         try:
+            print(f"[DEBUG] Attempting to subscribe email: {email} with status 'pending'")
             response = self.client.lists.add_list_member(self.list_id, {
                 "email_address": email,
-                "status": "subscribed",
+                "status": "pending",  # <-- Triggers confirmation email
                 "merge_fields": {
                     "FNAME": "",
                     "LNAME": ""
                 }
             })
+            print(f"[DEBUG] Mailchimp add_list_member response: {response}")
+            print(f"[DEBUG] Email {email} status after add: {response.get('status')}")
             
             return {
                 "success": True,
-                "message": "Successfully subscribed to newsletter",
-                "subscriber_hash": response.get("id")
+                "message": "Successfully sent confirmation email (pending status)",
+                "subscriber_hash": response.get("id"),
+                "status": response.get("status")
             }
             
         except ApiClientError as error:
             error_text = error.text
+            print(f"[ERROR] Mailchimp ApiClientError: {error_text}")
             if "Member Exists" in error_text:
+                # Check current status
+                try:
+                    member = self.client.lists.get_list_member(self.list_id, email)
+                    print(f"[DEBUG] Existing member status: {member.get('status')}")
+                except Exception as e:
+                    print(f"[ERROR] Could not fetch existing member: {e}")
                 return {
                     "success": True,
-                    "message": "Email already subscribed",
+                    "message": "Email already subscribed or pending",
                     "subscriber_hash": None
                 }
             else:
@@ -77,6 +88,7 @@ class MailchimpService:
                     "error": f"Failed to subscribe: {error_text}"
                 }
         except Exception as e:
+            print(f"[ERROR] Unexpected error in subscribe_email: {e}")
             return {
                 "success": False,
                 "error": f"Unexpected error: {str(e)}"
@@ -97,35 +109,46 @@ class MailchimpService:
             # Get subscriber hash
             subscriber_hash = self._get_subscriber_hash(email)
             if not subscriber_hash:
+                print(f"[ERROR] Subscriber not found for email: {email}")
                 return {
                     "success": False,
                     "error": "Subscriber not found"
                 }
-            
+            # Check current status before updating
+            try:
+                member = self.client.lists.get_list_member(self.list_id, email)
+                print(f"[DEBUG] update_preferences: Current status for {email}: {member.get('status')}")
+            except Exception as e:
+                print(f"[ERROR] Could not fetch member before updating: {e}")
             # Update merge fields with preferences
             merge_fields = {}
             for category, enabled in preferences.items():
                 merge_fields[f"PREF_{category.upper()}"] = "Yes" if enabled else "No"
-            
             # Update subscriber
-            self.client.lists.set_list_member(self.list_id, subscriber_hash, {
+            update_response = self.client.lists.set_list_member(self.list_id, subscriber_hash, {
                 "merge_fields": merge_fields
             })
-            
-            # Send confirmation email
+            print(f"[DEBUG] update_preferences: set_list_member response: {update_response}")
+            # Check status after updating
+            try:
+                member_after = self.client.lists.get_list_member(self.list_id, email)
+                print(f"[DEBUG] update_preferences: Status after update for {email}: {member_after.get('status')}")
+            except Exception as e:
+                print(f"[ERROR] Could not fetch member after updating: {e}")
+            # Send confirmation email (placeholder)
             self._send_confirmation_email(subscriber_hash)
-            
             return {
                 "success": True,
                 "message": "Preferences updated and confirmation email sent"
             }
-            
         except ApiClientError as error:
+            print(f"[ERROR] Mailchimp ApiClientError in update_preferences: {error.text}")
             return {
                 "success": False,
                 "error": f"Failed to update preferences: {error.text}"
             }
         except Exception as e:
+            print(f"[ERROR] Unexpected error in update_preferences: {e}")
             return {
                 "success": False,
                 "error": f"Unexpected error: {str(e)}"
