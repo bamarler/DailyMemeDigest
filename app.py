@@ -3,7 +3,7 @@
 # Main Flask application - entry point
 # ==============================================================================
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
 import json
 import sys
@@ -48,11 +48,7 @@ else:
     from src.meme_generator import generate_meme_image
 
 def create_app():
-    app = Flask(__name__)
-    
-    # Configure static files for the separated frontend
-    app.static_folder = 'static'
-    app.static_url_path = '/static'
+    app = Flask(__name__, static_folder='build', static_url_path='')
     
     # Add custom CLI commands
     @app.cli.command()
@@ -71,8 +67,13 @@ def create_app():
     
     @app.route('/')
     def index():
-        """Serve the main HTML page"""
-        return render_template('index.html')
+        """Serve the React app"""
+        return send_from_directory(app.static_folder, 'index.html')
+    
+    @app.route('/<path:path>')
+    def serve_react(path):
+        """Serve React app for all other routes"""
+        return send_from_directory(app.static_folder, 'index.html')
     
     @app.route('/history')
     def history():
@@ -250,6 +251,109 @@ def create_app():
             'timestamp': datetime.now().isoformat()
         })
     
+    # API Routes for React frontend
+    @app.route('/api/subscribe', methods=['POST'])
+    def api_subscribe():
+        """Subscribe email to Mailchimp list"""
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            print(f"[DEBUG] /api/subscribe called with email: {email}")
+            
+            if not email:
+                print("[ERROR] No email provided to /api/subscribe")
+                return jsonify({
+                    'success': False,
+                    'error': 'Email is required'
+                }), 400
+            
+            # Initialize Mailchimp service
+            try:
+                from src.mailchimp_service import MailchimpService
+                mailchimp = MailchimpService()
+                print(f"[DEBUG] MailchimpService initialized in /api/subscribe")
+                result = mailchimp.subscribe_email(email)
+                print(f"[DEBUG] MailchimpService.subscribe_email result: {result}")
+                
+                return jsonify(result)
+                
+            except ImportError:
+                print("[WARN] MailchimpService not available, simulating success.")
+                # Fallback if Mailchimp is not configured
+                return jsonify({
+                    'success': True,
+                    'message': 'Email subscription successful (Mailchimp not configured)'
+                })
+                
+        except Exception as e:
+            print(f"[ERROR] Exception in /api/subscribe: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Subscription failed: {str(e)}'
+            }), 500
+    
+    @app.route('/api/preferences', methods=['POST'])
+    def api_preferences():
+        """Update user preferences and send confirmation email"""
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            preferences = data.get('preferences', {})
+            print(f"[DEBUG] /api/preferences called with email: {email}, preferences: {preferences}")
+            
+            if not email:
+                print("[ERROR] No email provided to /api/preferences")
+                return jsonify({
+                    'success': False,
+                    'error': 'Email is required'
+                }), 400
+            
+            # Initialize Mailchimp service
+            try:
+                from src.mailchimp_service import MailchimpService
+                mailchimp = MailchimpService()
+                print(f"[DEBUG] MailchimpService initialized in /api/preferences")
+                result = mailchimp.update_preferences(email, preferences)
+                print(f"[DEBUG] MailchimpService.update_preferences result: {result}")
+                
+                return jsonify(result)
+                
+            except ImportError:
+                print("[WARN] MailchimpService not available, simulating success.")
+                # Fallback if Mailchimp is not configured
+                return jsonify({
+                    'success': True,
+                    'message': 'Preferences saved successfully (Mailchimp not configured)'
+                })
+                
+        except Exception as e:
+            print(f"[ERROR] Exception in /api/preferences: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Failed to save preferences: {str(e)}'
+            }), 500
+    
+    @app.route('/api/confirm/<token>')
+    def api_confirm(token):
+        """Confirm email subscription"""
+        try:
+            from src.mailchimp_service import MailchimpService
+            mailchimp = MailchimpService()
+            result = mailchimp.confirm_subscription(token)
+            
+            return jsonify(result)
+            
+        except ImportError:
+            return jsonify({
+                'success': True,
+                'message': 'Subscription confirmed (Mailchimp not configured)'
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Confirmation failed: {str(e)}'
+            }), 500
+    
     # Error handlers for better API responses
     @app.errorhandler(404)
     def not_found_error(error):
@@ -297,6 +401,9 @@ if __name__ == '__main__':
     print("   - GET  /api/memes (get existing memes)")
     print("   - GET  /api/news (get news preview)")
     print("   - GET  /api/health (health check)")
+    print("   - POST /api/subscribe (subscribe to Mailchimp list)")
+    print("   - POST /api/preferences (update user preferences)")
+    print("   - GET  /api/confirm/<token> (confirm email subscription)")
     
     # Check required API keys and warn if missing
     missing_keys = []
