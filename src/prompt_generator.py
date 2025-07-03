@@ -15,6 +15,7 @@ from typing import List, Dict, Tuple
 import google.generativeai as genai
 from dotenv import load_dotenv
 import random
+from src.database import get_random_templates
 
 # Load environment variables
 load_dotenv()
@@ -41,7 +42,7 @@ def generate_meme_prompts(articles: List[Dict]) -> List[Tuple[str, str]]:
     if not articles:
         return []
     
-    meme_templates = load_meme_templates(len(articles))
+    meme_templates = get_random_templates(len(articles) * 3)
     print(f"found {len(meme_templates)} meme templates.")
     
     # Step 1: Get semantic matches between articles and memes

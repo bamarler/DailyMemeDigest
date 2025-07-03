@@ -295,11 +295,20 @@ class MemeUI {
                 `;
             }
 
-            const cleanBase64 = meme.png_base64.replace(/\s/g, '').trim();
+            if (!meme.image || meme.image.trim() === '') {
+                return `
+                    <div class="error-card">
+                        <div class="error-content">
+                            <h3>🖼️ No Image</h3>
+                            <p>Image URL not available</p>
+                        </div>
+                    </div>
+                `;
+            }
             
             return `
                 <div class="meme-card" onclick="window.memeUI.openMemeLink('${meme.url}')" title="Click to view source article">
-                    <img src="data:image/png;base64,${cleanBase64}" 
+                    <img src="${meme.image}" 
                          alt="AI Generated Meme: ${(meme.prompt || 'Generated meme').substring(0, 100)}" 
                          class="meme-image"
                          loading="lazy"

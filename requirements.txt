@@ -8,3 +8,5 @@ gunicorn==21.2.0
 google-generativeai==0.8.5
 newsapi-python>=0.2.6
 scikit-learn>=1.0.0
+psycopg2-binary
+cloudinary

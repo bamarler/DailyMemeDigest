@@ -48,9 +48,11 @@ class HistoryPage {
             
             if (data.success && data.memes) {
                 this.allMemes = data.memes.sort((a, b) => {
-                    return new Date(b.timestamp) - new Date(a.timestamp);
+                    const dateA = new Date(a.generated_at || a.timestamp);
+                    const dateB = new Date(b.generated_at || b.timestamp);
+                    return dateB - dateA;
                 });
-                console.log(`Loaded ${this.allMemes.length} memes, sorted by timestamp`);
+                console.log(`Loaded ${this.allMemes.length} memes, sorted by date`);
             } else {
                 console.error('Invalid response:', data);
                 this.allMemes = [];
@@ -111,10 +113,10 @@ class HistoryPage {
         const card = document.createElement('div');
         card.className = 'meme-card-container';
         
-        const hasBase64 = meme.png_base64 && meme.png_base64.trim() !== '';
+        const hasImage = meme.image && meme.image.trim() !== '';
         const hasUrl = meme.url && meme.url.trim() !== '' && meme.url !== 'https://example.com';
         
-        if (!hasBase64) {
+        if (!hasImage) {
             card.innerHTML = `
                 <div class="meme-content">
                     <div class="error-card">
@@ -128,18 +130,18 @@ class HistoryPage {
             return card;
         }
         
-        const imageSrc = `data:image/png;base64,${meme.png_base64}`;
         const timestamp = meme.generated_at || meme.timestamp;
         const formattedDate = timestamp ? this.formatDate(timestamp) : 'Unknown date';
-        const trends = meme.trends_used ? meme.trends_used.join(', ') : 'Unknown trends';
+        const trends = meme.trends_used || meme.trends || [];
+        const trendsText = Array.isArray(trends) ? trends.join(', ') : 'Unknown trends';
         
-        // Create clickable meme card
         const memeCardHTML = `
             <div class="meme-content" ${hasUrl ? `onclick="window.open('${meme.url}', '_blank')"` : ''}>
                 <img 
-                    src="${imageSrc}" 
+                    src="${meme.image}" 
                     alt="AI Meme #${globalIndex + 1}" 
                     class="meme-image"
+                    loading="lazy"
                     onload="this.classList.add('loaded')"
                     onerror="this.parentElement.innerHTML='<div class=\\'error-card\\'><div class=\\'error-content\\'><h3>Failed to Load</h3><p>Image could not be displayed</p></div></div>'"
                 >
@@ -150,7 +152,7 @@ class HistoryPage {
                     </div>
                     <div class="meme-metadata">
                         <span class="meme-date">${formattedDate}</span>
-                        <span class="meme-trends">${trends}</span>
+                        <span class="meme-trends">${trendsText}</span>
                     </div>
                 </div>
             </div>

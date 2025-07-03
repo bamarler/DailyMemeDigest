@@ -18,6 +18,7 @@ load_dotenv()
 from src.news_aggregator import get_news_articles
 from src.filter_top_k import get_top_articles
 from src.prompt_generator import generate_meme_prompts
+from src.database import get_memes as get_memes_db
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='AI Meme Factory')
@@ -171,27 +172,14 @@ def create_app():
     
     @app.route('/api/memes')
     def get_memes():
-        """Get existing memes from database"""
+        """
+        Get existing memes from database
+        
+        Returns:
+            JSON response with memes list and total count
+        """
         try:
-            sort_by = request.args.get('sort', 'recent')
-            
-            try:
-                with open("database/memes.json", "r") as f:
-                    data = json.loads(f.read())
-                    # Handle both list and dict formats
-                    if isinstance(data, list):
-                        all_memes = data
-                    elif isinstance(data, dict) and 'memes' in data:
-                        all_memes = data['memes']
-                    else:
-                        all_memes = []
-            except (FileNotFoundError, json.JSONDecodeError):
-                all_memes = []
-            
-            # Sort memes if requested
-            if sort_by == 'recent' and all_memes:
-                # Sort by generated_at if available
-                all_memes.sort(key=lambda x: x.get('generated_at', ''), reverse=True)
+            all_memes = get_memes_db(sort_by='recent')
             
             return jsonify({
                 'success': True,

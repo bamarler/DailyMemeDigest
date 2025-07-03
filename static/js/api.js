@@ -51,13 +51,13 @@ class MemeAPI {
     /**
      * Get existing memes from the database
      * 
-     * @param {string} sortBy - Sort order ('recent' or 'popular')
-     * @param {number} limit - Number of memes to retrieve (0 for all)
      * @returns {Promise<Object>} Response with memes array and metadata
      */
-    async getMemes(sortBy = 'recent', limit = 20) {
+    async getMemes() {
         try {
-            const response = await fetch(`/api/memes?sort=${sortBy}&limit=${limit}`);
+            const response = await fetch(`/api/memes`);
+
+
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
