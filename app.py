@@ -288,8 +288,19 @@ if __name__ == '__main__':
     
     # Check required API keys and warn if missing
     missing_keys = []
+
+    if not os.getenv('CLOUDINARY_CLOUD_NAME') or os.getenv('CLOUDINARY_CLOUD_NAME') == 'your-cloudinary-cloud-name-here':
+        missing_keys.append('CLOUDINARY_CLOUD_NAME')
     
-    # Always need news API and Gemini
+    if not os.getenv('CLOUDINARY_API_KEY') or os.getenv('CLOUDINARY_API_KEY') == 'your-cloudinary-api-key-here':
+        missing_keys.append('CLOUDINARY_API_KEY')
+    
+    if not os.getenv('CLOUDINARY_API_SECRET') or os.getenv('CLOUDINARY_API_SECRET') == 'your-cloudinary-api-secret-here':
+        missing_keys.append('CLOUDINARY_API_SECRET')
+
+    if not os.getenv('DATABASE_URL') or os.getenv('DATABASE_URL') == 'your-database-url-here':
+        missing_keys.append('DATABASE_URL')
+
     if not os.getenv('NEWS_API_KEY') or os.getenv('NEWS_API_KEY') == 'your-news-api-key-here':
         missing_keys.append('NEWS_API_KEY')
     
