@@ -21,9 +21,8 @@ RUN mkdir -p database static/css static/js templates src
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=app.py
 ENV MEME_MODE=cloud
 
-# Use gunicorn with the WSGI entry point
-# Cloud Run provides PORT environment variable
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 120 wsgi:app
+# Run meme.py directly with Cloud Run's PORT
+# Note: meme.py expects "python meme.py cloud 8080" format
+CMD exec python meme.py cloud $PORT
