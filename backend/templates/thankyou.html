@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}AI Meme Newsletter - Thank You{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8 p-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+                Thank You!
+            </h1>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <p class="text-gray-600 mb-4">
+                    Thank you for completing your sign up! Your subscription has been confirmed.
+                </p>
+                <div class="flex items-center justify-center space-x-2 text-blue-600">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span class="text-sm">Redirecting you to the home page...</span>
+                </div>
+                <div class="mt-4 text-xs text-gray-500">
+                    You'll receive your first AI Meme Newsletter soon!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+setTimeout(function() {
+    window.location.href = "/";
+}, 5000);
+</script>
+{% endblock %} 

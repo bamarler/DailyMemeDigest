@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}AI Meme Newsletter - Preferences{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                Choose Your News Preferences
+            </h1>
+            <p class="text-gray-600">
+                Select which AI topics you'd like to receive updates about
+            </p>
+            {% if email %}
+            <p class="text-sm text-blue-600 mt-2">
+                Email: {{ email }}
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <form id="preferences-form" class="space-y-4">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">OpenAI & ChatGPT</h3>
+                            <p class="text-sm text-gray-500">Latest updates from OpenAI and ChatGPT developments</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="openai" class="sr-only toggle-switch" checked>
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Claude & Anthropic</h3>
+                            <p class="text-sm text-gray-500">News about Claude AI and Anthropic's research</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="claude" class="sr-only toggle-switch" checked>
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Machine Learning</h3>
+                            <p class="text-sm text-gray-500">General machine learning breakthroughs and research</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="machineLearning" class="sr-only toggle-switch" checked>
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Generative AI</h3>
+                            <p class="text-sm text-gray-500">Text, image, and video generation technologies</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="generativeAI" class="sr-only toggle-switch" checked>
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Robotics & Automation</h3>
+                            <p class="text-sm text-gray-500">AI-powered robots and automation systems</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="robotics" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Autonomous Systems</h3>
+                            <p class="text-sm text-gray-500">Self-driving cars, drones, and autonomous vehicles</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="autonomous" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Neural Networks</h3>
+                            <p class="text-sm text-gray-500">Deep learning and neural network architectures</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="neuralNetworks" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">Deep Learning</h3>
+                            <p class="text-sm text-gray-500">Advanced deep learning techniques and applications</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="deepLearning" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">AI Ethics & Policy</h3>
+                            <p class="text-sm text-gray-500">Ethical considerations and policy discussions around AI</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="aiEthics" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900">AI Safety & Alignment</h3>
+                            <p class="text-sm text-gray-500">AI safety research and alignment efforts</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="aiSafety" class="sr-only toggle-switch">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="error-message" class="text-red-600 text-sm text-center hidden"></div>
+
+                <button
+                    type="submit"
+                    id="done-btn"
+                    class="w-full py-3 px-4 rounded-md font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                    Done
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Toggle switch functionality
+document.querySelectorAll('.toggle-switch').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const span = this.nextElementSibling;
+        const innerSpan = span.querySelector('span');
+        
+        if (this.checked) {
+            span.classList.add('bg-blue-600');
+            innerSpan.classList.add('translate-x-6');
+            innerSpan.classList.remove('translate-x-1');
+        } else {
+            span.classList.remove('bg-blue-600');
+            innerSpan.classList.remove('translate-x-6');
+            innerSpan.classList.add('translate-x-1');
+        }
+    });
+});
+
+// Form submission
+document.getElementById('preferences-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const button = document.getElementById('done-btn');
+    const originalText = button.textContent;
+    
+    // Collect preferences
+    const preferences = {};
+    document.querySelectorAll('.toggle-switch').forEach(checkbox => {
+        preferences[checkbox.name] = checkbox.checked;
+    });
+    
+    hideError();
+    showLoading(button);
+    
+    try {
+        const response = await fetch('/api/preferences', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                email: '{{ email }}',
+                preferences: preferences 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Redirect to confirmation page
+            window.location.href = '/confirmation-sent';
+        } else {
+            showError(data.error || 'Failed to save preferences. Please try again.');
+            hideLoading(button, originalText);
+        }
+    } catch (error) {
+        console.error('Preferences error:', error);
+        showError('Failed to save preferences. Please try again.');
+        hideLoading(button, originalText);
+    }
+});
+</script>
+{% endblock %} 

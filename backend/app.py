@@ -3,7 +3,7 @@
 # Main Flask application - entry point
 # ==============================================================================
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, session
 import os
 import json
 import sys
@@ -48,7 +48,10 @@ else:
     from src.meme_generator import generate_meme_image
 
 def create_app():
-    app = Flask(__name__, static_folder='build', static_url_path='')
+    app = Flask(__name__)
+    
+    # Configure Flask secret key
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # Add custom CLI commands
     @app.cli.command()
@@ -65,20 +68,151 @@ def create_app():
         os.environ['FLASK_RUN_MODE'] = 'local'
         app.run(debug=True, host='0.0.0.0', port=port)
     
-    @app.route('/')
-    def index():
-        """Serve the React app"""
-        return send_from_directory(app.static_folder, 'index.html')
+    @app.route('/api/health')
+    def health_check():
+        """Health check endpoint for frontend"""
+        return jsonify({
+            'status': 'healthy',
+            'service': 'AI Meme Factory',
+            'timestamp': datetime.now().isoformat()
+        })
     
-    @app.route('/<path:path>')
-    def serve_react(path):
-        """Serve React app for all other routes"""
-        return send_from_directory(app.static_folder, 'index.html')
+    # Serve React build files (must be before catch-all route)
+    @app.route('/static/css/<path:filename>')
+    def serve_css(filename):
+        """Serve CSS files from React build"""
+        import os
+        build_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+        css_path = os.path.join(build_path, 'static', 'css')
+        print(f"[DEBUG] Serving CSS file: {filename}")
+        print(f"[DEBUG] CSS path: {css_path}")
+        return send_from_directory(css_path, filename)
     
-    @app.route('/history')
-    def history():
-        """Serve the history/previous generations page"""
-        return render_template('history.html')
+    @app.route('/static/js/<path:filename>')
+    def serve_js(filename):
+        """Serve JS files from React build"""
+        import os
+        build_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+        js_path = os.path.join(build_path, 'static', 'js')
+        print(f"[DEBUG] Serving JS file: {filename}")
+        print(f"[DEBUG] JS path: {js_path}")
+        return send_from_directory(js_path, filename)
+    
+    @app.route('/asset-manifest.json')
+    def serve_asset_manifest():
+        """Serve asset manifest from React build"""
+        import os
+        build_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+        return send_from_directory(build_path, 'asset-manifest.json')
+    
+    @app.route('/favicon.ico')
+    def serve_favicon():
+        """Serve favicon from React build"""
+        import os
+        build_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+        return send_from_directory(build_path, 'favicon.ico')
+    
+    @app.route('/api/subscribe', methods=['POST'])
+    def api_subscribe():
+        """Subscribe email to Mailchimp list"""
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            print(f"[DEBUG] /api/subscribe called with email: {email}")
+            
+            if not email:
+                print("[ERROR] No email provided to /api/subscribe")
+                return jsonify({
+                    'success': False,
+                    'error': 'Email is required'
+                }), 400
+            
+            # Initialize Mailchimp service
+            try:
+                from src.mailchimp_service import MailchimpService
+                mailchimp = MailchimpService()
+                print(f"[DEBUG] MailchimpService initialized in /api/subscribe")
+                result = mailchimp.subscribe_email(email)
+                print(f"[DEBUG] MailchimpService.subscribe_email result: {result}")
+                
+                return jsonify(result)
+                
+            except ImportError as e:
+                print(f"[WARN] MailchimpService not available, simulating success. ImportError: {e}")
+                # Fallback if Mailchimp is not configured
+                return jsonify({
+                    'success': True,
+                    'message': 'Email subscription successful (Mailchimp not configured)'
+                })
+                
+        except Exception as e:
+            print(f"[ERROR] Exception in /api/subscribe: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Subscription failed: {str(e)}'
+            }), 500
+    
+    @app.route('/api/preferences', methods=['POST'])
+    def api_preferences():
+        """Update user preferences and send confirmation email"""
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            preferences = data.get('preferences', {})
+            print(f"[DEBUG] /api/preferences called with email: {email}, preferences: {preferences}")
+            
+            if not email:
+                print("[ERROR] No email provided to /api/preferences")
+                return jsonify({
+                    'success': False,
+                    'error': 'Email is required'
+                }), 400
+            
+            # Initialize Mailchimp service
+            try:
+                from src.mailchimp_service import MailchimpService
+                mailchimp = MailchimpService()
+                print(f"[DEBUG] MailchimpService initialized in /api/preferences")
+                result = mailchimp.update_preferences(email, preferences)
+                print(f"[DEBUG] MailchimpService.update_preferences result: {result}")
+                
+                return jsonify(result)
+                
+            except ImportError as e:
+                print(f"[WARN] MailchimpService not available, simulating success. ImportError: {e}")
+                # Fallback if Mailchimp is not configured
+                return jsonify({
+                    'success': True,
+                    'message': 'Preferences saved successfully (Mailchimp not configured)'
+                })
+                
+        except Exception as e:
+            print(f"[ERROR] Exception in /api/preferences: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Failed to save preferences: {str(e)}'
+            }), 500
+    
+    @app.route('/api/confirm/<token>')
+    def api_confirm(token):
+        """Confirm email subscription"""
+        try:
+            from src.mailchimp_service import MailchimpService
+            mailchimp = MailchimpService()
+            result = mailchimp.confirm_subscription(token)
+            
+            return jsonify(result)
+            
+        except ImportError:
+            return jsonify({
+                'success': True,
+                'message': 'Subscription confirmed (Mailchimp not configured)'
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Confirmation failed: {str(e)}'
+            }), 500
     
     @app.route('/api/generate', methods=['POST'])
     def generate_meme():
@@ -242,117 +376,14 @@ def create_app():
                 'error': str(e)
             }), 500
     
-    @app.route('/api/health')
-    def health_check():
-        """Health check endpoint for frontend"""
-        return jsonify({
-            'status': 'healthy',
-            'service': 'AI Meme Factory',
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    # API Routes for React frontend
-    @app.route('/api/subscribe', methods=['POST'])
-    def api_subscribe():
-        """Subscribe email to Mailchimp list"""
-        try:
-            data = request.get_json()
-            email = data.get('email')
-            print(f"[DEBUG] /api/subscribe called with email: {email}")
-            
-            if not email:
-                print("[ERROR] No email provided to /api/subscribe")
-                return jsonify({
-                    'success': False,
-                    'error': 'Email is required'
-                }), 400
-            
-            # Initialize Mailchimp service
-            try:
-                from src.mailchimp_service import MailchimpService
-                mailchimp = MailchimpService()
-                print(f"[DEBUG] MailchimpService initialized in /api/subscribe")
-                result = mailchimp.subscribe_email(email)
-                print(f"[DEBUG] MailchimpService.subscribe_email result: {result}")
-                
-                return jsonify(result)
-                
-            except ImportError:
-                print("[WARN] MailchimpService not available, simulating success.")
-                # Fallback if Mailchimp is not configured
-                return jsonify({
-                    'success': True,
-                    'message': 'Email subscription successful (Mailchimp not configured)'
-                })
-                
-        except Exception as e:
-            print(f"[ERROR] Exception in /api/subscribe: {e}")
-            return jsonify({
-                'success': False,
-                'error': f'Subscription failed: {str(e)}'
-            }), 500
-    
-    @app.route('/api/preferences', methods=['POST'])
-    def api_preferences():
-        """Update user preferences and send confirmation email"""
-        try:
-            data = request.get_json()
-            email = data.get('email')
-            preferences = data.get('preferences', {})
-            print(f"[DEBUG] /api/preferences called with email: {email}, preferences: {preferences}")
-            
-            if not email:
-                print("[ERROR] No email provided to /api/preferences")
-                return jsonify({
-                    'success': False,
-                    'error': 'Email is required'
-                }), 400
-            
-            # Initialize Mailchimp service
-            try:
-                from src.mailchimp_service import MailchimpService
-                mailchimp = MailchimpService()
-                print(f"[DEBUG] MailchimpService initialized in /api/preferences")
-                result = mailchimp.update_preferences(email, preferences)
-                print(f"[DEBUG] MailchimpService.update_preferences result: {result}")
-                
-                return jsonify(result)
-                
-            except ImportError:
-                print("[WARN] MailchimpService not available, simulating success.")
-                # Fallback if Mailchimp is not configured
-                return jsonify({
-                    'success': True,
-                    'message': 'Preferences saved successfully (Mailchimp not configured)'
-                })
-                
-        except Exception as e:
-            print(f"[ERROR] Exception in /api/preferences: {e}")
-            return jsonify({
-                'success': False,
-                'error': f'Failed to save preferences: {str(e)}'
-            }), 500
-    
-    @app.route('/api/confirm/<token>')
-    def api_confirm(token):
-        """Confirm email subscription"""
-        try:
-            from src.mailchimp_service import MailchimpService
-            mailchimp = MailchimpService()
-            result = mailchimp.confirm_subscription(token)
-            
-            return jsonify(result)
-            
-        except ImportError:
-            return jsonify({
-                'success': True,
-                'message': 'Subscription confirmed (Mailchimp not configured)'
-            })
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Confirmation failed: {str(e)}'
-            }), 500
+    # Catch-all route for React Router (must be last)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react_app(path):
+        """Serve React app for all routes"""
+        import os
+        build_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+        return send_from_directory(build_path, 'index.html')
     
     # Error handlers for better API responses
     @app.errorhandler(404)
@@ -390,12 +421,9 @@ if __name__ == '__main__':
         print("\nNote: Cloud mode costs money per image generated")
     
     print("\nServer Info:")
-    print("Templates folder: templates/")
-    print("   - index.html (main page)")
-    print("   - history.html (previous generations)")
-    print("Static files folder: static/")
+    print("Frontend: React app served from ../frontend/build/")
+    print("Backend: Flask API server")
     print(f"Main page: http://localhost:{args.port}")
-    print(f"History page: http://localhost:{args.port}/history")
     print("API endpoints:")
     print("   - POST /api/generate (generate memes)")
     print("   - GET  /api/memes (get existing memes)")

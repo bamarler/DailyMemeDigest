@@ -1,10 +1,11 @@
 # AI Meme Newsletter
 
-A modern React-based newsletter subscription system for AI enthusiasts, featuring a beautiful 4-page flow for email signup and preference selection.
+A modern Flask + React newsletter subscription system for AI enthusiasts, featuring a beautiful 4-page flow for email signup and preference selection.
 
 ## 🚀 Features
 
 - **Modern React Frontend**: Built with React 18, Tailwind CSS, and React Router
+- **Flask Backend**: RESTful API with Mailchimp integration
 - **4-Page User Flow**: 
   1. Email signup with validation
   2. News preference selection with toggle switches
@@ -12,7 +13,27 @@ A modern React-based newsletter subscription system for AI enthusiasts, featurin
   4. Thank you page with auto-redirect
 - **Mailchimp Integration**: Seamless email list management and preference tracking
 - **Responsive Design**: Beautiful UI that works on all devices
-- **API-First Backend**: Flask backend with RESTful API endpoints
+- **Production Ready**: Flask serves the built React app
+
+## 📁 Project Structure
+
+```
+AIMemeNewletter/
+├── frontend/           # React application
+│   ├── src/           # React source code
+│   ├── public/        # Static assets
+│   ├── build/         # Built React app (served by Flask)
+│   ├── package.json   # Node.js dependencies
+│   └── tailwind.config.js
+├── backend/           # Flask application
+│   ├── src/           # Python source code
+│   ├── templates/     # Jinja templates (legacy)
+│   ├── app.py         # Main Flask application
+│   └── requirements.txt
+├── dev-setup.bat      # Windows setup script
+├── dev-setup.sh       # Linux/Mac setup script
+└── README.md
+```
 
 ## 📋 Prerequisites
 
@@ -28,8 +49,22 @@ git clone <repository-url>
 cd AIMemeNewletter
 ```
 
-### 2. Setup Python Backend
+### 2. Quick Setup (Recommended)
 ```bash
+# On Windows:
+dev-setup.bat
+
+# On macOS/Linux:
+chmod +x dev-setup.sh
+./dev-setup.sh
+```
+
+### 3. Manual Setup
+
+**Backend Setup:**
+```bash
+cd backend
+
 # Create virtual environment
 python -m venv venv
 
@@ -43,20 +78,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Setup React Frontend
-
-**Option A: Using the setup script (Recommended)**
+**Frontend Setup:**
 ```bash
-# On Windows:
-setup-frontend.bat
+cd frontend
 
-# On macOS/Linux:
-chmod +x setup-frontend.sh
-./setup-frontend.sh
-```
-
-**Option B: Manual setup**
-```bash
 # Install React dependencies
 npm install
 
@@ -81,25 +106,27 @@ Required environment variables:
 
 ## 🚀 Running the Application
 
-### Development Mode
+### Production Mode (Recommended)
 ```bash
-# Start the Flask backend
-python app.py
-
-# In a separate terminal, start React development server
-npm start
-```
-
-### Production Mode
-```bash
-# Build the React app
-npm run build
-
 # Start the Flask backend (serves the built React app)
+cd backend
 python app.py
 ```
 
 The application will be available at `http://localhost:5001`
+
+### Development Mode
+```bash
+# Terminal 1: Start Flask backend
+cd backend
+python app.py
+
+# Terminal 2: Start React development server
+cd frontend
+npm start
+```
+
+React dev server will run on `http://localhost:3000` with API proxy to Flask.
 
 ## 📱 User Flow
 
@@ -128,17 +155,20 @@ The application will be available at `http://localhost:5001`
 - `POST /api/subscribe` - Subscribe email to Mailchimp list
 - `POST /api/preferences` - Update user preferences
 - `GET /api/confirm/<token>` - Confirm email subscription
+- `POST /api/generate` - Generate memes (legacy feature)
+- `GET /api/memes` - Get meme history (legacy feature)
+- `GET /api/news` - Get news articles (legacy feature)
 
 ## 🎨 Customization
 
-### Styling
-The app uses Tailwind CSS for styling. You can customize the design by:
-- Modifying `tailwind.config.js` for theme changes
+### Frontend Styling
+The React app uses Tailwind CSS for styling. You can customize the design by:
+- Modifying `frontend/tailwind.config.js` for theme changes
 - Updating component classes in the React components
-- Adding custom CSS in `src/index.css`
+- Adding custom CSS in `frontend/src/index.css`
 
 ### News Categories
-Edit the categories in `src/pages/NewsPreferences.js`:
+Edit the categories in `frontend/src/pages/NewsPreferences.js`:
 ```javascript
 const categories = [
   { key: 'openai', label: 'OpenAI & ChatGPT', description: '...' },
@@ -146,8 +176,14 @@ const categories = [
 ];
 ```
 
+### Backend Configuration
+The Flask backend configuration is in `backend/app.py`. You can:
+- Modify API endpoints
+- Add new routes
+- Customize error handling
+
 ### Mailchimp Integration
-The Mailchimp integration is handled in `src/mailchimp_service.py`. You can:
+The Mailchimp integration is handled in `backend/src/mailchimp_service.py`. You can:
 - Customize merge field names
 - Add additional subscriber data
 - Implement custom email templates
@@ -165,12 +201,17 @@ The Mailchimp integration is handled in `src/mailchimp_service.py`. You can:
    - Check that your Mailchimp account is active
 
 3. **Build errors**
-   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+   - Clear node_modules and reinstall: `cd frontend && rm -rf node_modules && npm install`
    - Check for version conflicts in package.json
 
 4. **Flask backend errors**
    - Ensure all Python dependencies are installed
    - Check that your virtual environment is activated
+   - Verify the React build exists in `frontend/build/`
+
+5. **404 errors on React routes**
+   - Ensure the React app is built: `cd frontend && npm run build`
+   - Check that `frontend/build/index.html` exists
 
 ## 📄 License
 
