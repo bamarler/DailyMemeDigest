@@ -9,6 +9,7 @@ class MemeUI {
         this.selectedDuration = 1;
         this.selectedMemes = 1;
         this.generatedMemes = [];
+        this.mosaicGrid = null;
         
         console.log('🎨 MemeUI initializing...');
         
@@ -221,7 +222,7 @@ class MemeUI {
             await this.updateProgress(40, 'Analyzing news articles with AI...');
             await this.sleep(1000);
             
-            await this.updateProgress(60, 'Generating meme prompts...');
+            await this.updateProgress(60, 'Generating memes...');
             
             const memes = await window.memeAPI.generateMemes(this.selectedTrends, this.selectedDuration, this.selectedMemes);
             
@@ -265,7 +266,7 @@ class MemeUI {
     }
 
     /**
-     * Render generated memes
+     * Render generated memes with unified card design
      */
     renderMemes() {
         const container = document.getElementById('memesGrid');
@@ -273,52 +274,117 @@ class MemeUI {
         
         if (this.generatedMemes.length === 0) {
             container.innerHTML = `
-                <div class="error-card">
-                    <div class="error-content">
-                        <h3>🤔 No Memes Generated</h3>
-                        <p>Try selecting different trends or adjusting the time duration.</p>
+                <div class="meme-card-wrapper">
+                    <div class="meme-card-error">
+                        <div class="meme-error-content">
+                            <h3>No Memes Generated</h3>
+                            <p>Try selecting different trends or adjusting the time duration.</p>
+                        </div>
                     </div>
                 </div>
             `;
             return;
         }
         
-        container.innerHTML = this.generatedMemes.map((meme, index) => {
-            if (!meme.success) {
-                return `
-                    <div class="error-card">
-                        <div class="error-content">
-                            <h3>❌ Generation Failed</h3>
+        if (!this.mosaicGrid) {
+            this.mosaicGrid = new MosaicGrid('memesGrid', {
+                columnWidth: 300,
+                gap: 30
+            });
+        }
+        
+        this.mosaicGrid.addItems(this.generatedMemes, (meme, index) => {
+            return this.createUnifiedMemeCard(meme, index);
+        });
+
+        this.setupLazyLoading();
+    }
+
+    /**
+     * Create unified meme card HTML
+     * 
+     * @param {Object} meme - Meme data object
+     * @param {number} index - Card index
+     * @returns {string} HTML string for meme card
+     */
+    createUnifiedMemeCard(meme, index) {
+        if (!meme.success) {
+            return `
+                <div class="meme-card-wrapper">
+                    <div class="meme-card-error">
+                        <div class="meme-error-content">
+                            <h3>Generation Failed</h3>
                             <p>${meme.error || 'Unknown error occurred'}</p>
                         </div>
                     </div>
-                `;
-            }
+                </div>
+            `;
+        }
 
-            if (!meme.image || meme.image.trim() === '') {
-                return `
-                    <div class="error-card">
-                        <div class="error-content">
-                            <h3>🖼️ No Image</h3>
+        if (!meme.image || meme.image.trim() === '') {
+            return `
+                <div class="meme-card-wrapper">
+                    <div class="meme-card-error">
+                        <div class="meme-error-content">
+                            <h3>No Image</h3>
                             <p>Image URL not available</p>
                         </div>
                     </div>
-                `;
-            }
-            
-            return `
-                <div class="meme-card" onclick="window.memeUI.openMemeLink('${meme.url}')" title="Click to view source article">
-                    <img src="${meme.image}" 
-                         alt="AI Generated Meme: ${(meme.prompt || 'Generated meme').substring(0, 100)}" 
-                         class="meme-image"
-                         loading="lazy"
-                         onload="console.log('Image ${index + 1} loaded successfully'); this.classList.add('loaded')"
-                         onerror="console.log('Image ${index + 1} failed to load'); this.parentElement.innerHTML='<div class=\\'error-card\\'><div class=\\'error-content\\'><h3>🖼️ Image Error</h3><p>Failed to load meme image</p></div></div>'">
                 </div>
             `;
-        }).join('');
+        }
+        
+        const hasValidUrl = meme.url && meme.url.trim() !== '' && meme.url !== 'https://example.com';
+        const timestamp = meme.generated_at || meme.timestamp || new Date().toISOString();
+        const formattedDate = this.formatDate(timestamp);
+        
+        return `
+            <div class="meme-card-wrapper" onclick="window.memeUI.openMemeLink('${meme.url}')">
+                <div class="meme-card">
+                    <div class="meme-card-face meme-card-front">
+                        <img src="${meme.image}" 
+                            alt="AI Generated Meme ${index + 1}" 
+                            class="meme-card-image"
+                            loading="lazy"
+                            onerror="this.parentElement.parentElement.innerHTML='<div class=\\'meme-card-error\\'><div class=\\'meme-error-content\\'><h3>Image Error</h3><p>Failed to load meme image</p></div></div>'">
+                    </div>
+                    <div class="meme-card-face meme-card-back">
+                        <div class="meme-card-back-content">
+                            <div class="meme-prompt-section">
+                                <div class="meme-prompt-label">Prompt</div>
+                                <div class="meme-prompt-text">${meme.prompt || 'No prompt available'}</div>
+                            </div>
+                            <div class="meme-metadata-section">
+                                <div class="meme-timestamp">Generated: ${formattedDate}</div>
+                                ${hasValidUrl ? '<div class="meme-url-hint">Click to view source article</div>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
-        this.setupLazyLoading();
+    /**
+     * Format date for display
+     * 
+     * @param {string} timestamp - ISO timestamp string
+     * @returns {string} Formatted date string
+     */
+    formatDate(timestamp) {
+        try {
+            const date = new Date(timestamp);
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('en-US', options);
+        } catch (error) {
+            return 'Unknown date';
+        }
     }
 
     /**

@@ -1,0 +1,32 @@
+/**
+ * Mosaic Grid styles
+ * Styles for the masonry-style grid layout
+ */
+
+ .mosaic-item {
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+.mosaic-item .meme-card-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.mosaic-item .meme-card {
+    width: 100%;
+    height: 100%;
+}
+
+.mosaic-item .meme-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Ensure images are visible during loading */
+.mosaic-item img {
+    opacity: 1;
+    visibility: visible;
+}

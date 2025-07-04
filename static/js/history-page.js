@@ -9,6 +9,7 @@ class HistoryPage {
         this.totalPages = 1;
         this.memesPerPage = 32;
         this.allMemes = [];
+        this.mosaicGrid = null;
     }
 
     /**
@@ -17,7 +18,18 @@ class HistoryPage {
     init() {
         console.log('Initializing history page...');
         this.setupEventListeners();
+        this.initializeMosaicGrid();
         this.loadMemes();
+    }
+
+    /**
+     * Initialize the mosaic grid
+     */
+    initializeMosaicGrid() {
+        this.mosaicGrid = new MosaicGrid('historyGrid', {
+            columnWidth: 250,
+            gap: 20
+        });
     }
 
     /**
@@ -86,16 +98,12 @@ class HistoryPage {
      * Display memes for the current page
      */
     displayCurrentPage() {
-        const grid = document.getElementById('historyGrid');
         const startIdx = (this.currentPage - 1) * this.memesPerPage;
         const endIdx = startIdx + this.memesPerPage;
         const memesToShow = this.allMemes.slice(startIdx, endIdx);
         
-        grid.innerHTML = '';
-        
-        memesToShow.forEach((meme, index) => {
-            const card = this.createMemeCard(meme, startIdx + index);
-            grid.appendChild(card);
+        this.mosaicGrid.addItems(memesToShow, (meme, index) => {
+            return this.createMemeCard(meme, startIdx + index);
         });
         
         this.updatePaginationControls();
@@ -103,31 +111,27 @@ class HistoryPage {
     }
 
     /**
-     * Create a meme card with prompt display
+     * Create a meme card with unified design
      * 
      * @param {Object} meme - Meme data
      * @param {number} globalIndex - Index in the full array
-     * @returns {HTMLElement} Meme card element
+     * @returns {string} HTML string for meme card
      */
     createMemeCard(meme, globalIndex) {
-        const card = document.createElement('div');
-        card.className = 'meme-card-container';
-        
         const hasImage = meme.image && meme.image.trim() !== '';
         const hasUrl = meme.url && meme.url.trim() !== '' && meme.url !== 'https://example.com';
         
         if (!hasImage) {
-            card.innerHTML = `
-                <div class="meme-content">
-                    <div class="error-card">
-                        <div class="error-content">
+            return `
+                <div class="meme-card-wrapper">
+                    <div class="meme-card-error">
+                        <div class="meme-error-content">
                             <h3>Image Not Available</h3>
                             <p>This meme could not be loaded</p>
                         </div>
                     </div>
                 </div>
             `;
-            return card;
         }
         
         const timestamp = meme.generated_at || meme.timestamp;
@@ -135,31 +139,39 @@ class HistoryPage {
         const trends = meme.trends_used || meme.trends || [];
         const trendsText = Array.isArray(trends) ? trends.join(', ') : 'Unknown trends';
         
-        const memeCardHTML = `
-            <div class="meme-content" ${hasUrl ? `onclick="window.open('${meme.url}', '_blank')"` : ''}>
-                <img 
-                    src="${meme.image}" 
-                    alt="AI Meme #${globalIndex + 1}" 
-                    class="meme-image"
-                    loading="lazy"
-                    onload="this.classList.add('loaded')"
-                    onerror="this.parentElement.innerHTML='<div class=\\'error-card\\'><div class=\\'error-content\\'><h3>Failed to Load</h3><p>Image could not be displayed</p></div></div>'"
-                >
-                <div class="meme-info">
-                    <div class="meme-prompt">
-                        <strong>Prompt:</strong>
-                        <p>${meme.prompt || 'No prompt available'}</p>
+        const clickHandler = hasUrl ? `onclick="window.open('${meme.url}', '_blank')"` : '';
+        
+        return `
+            <div class="meme-card-wrapper" ${clickHandler}>
+                <div class="meme-card">
+                    <div class="meme-card-face meme-card-front">
+                        <img 
+                            src="${meme.image}" 
+                            alt="AI Meme #${globalIndex + 1}" 
+                            class="meme-card-image"
+                            loading="lazy"
+                            onerror="this.parentElement.parentElement.innerHTML='<div class=\\'meme-card-error\\'><div class=\\'meme-error-content\\'><h3>Failed to Load</h3><p>Image could not be displayed</p></div></div>'"
+                        >
                     </div>
-                    <div class="meme-metadata">
-                        <span class="meme-date">${formattedDate}</span>
-                        <span class="meme-trends">${trendsText}</span>
+                    <div class="meme-card-face meme-card-back">
+                        <div class="meme-card-back-content">
+                            <div class="meme-prompt-section">
+                                <div class="meme-prompt-label">Prompt</div>
+                                <div class="meme-prompt-text">${meme.prompt || 'No prompt available'}</div>
+                                ${trends.length > 0 ? `
+                                    <div class="meme-prompt-label" style="margin-top: 15px;">Trends Used</div>
+                                    <div class="meme-prompt-text" style="font-size: 0.8rem;">${trendsText}</div>
+                                ` : ''}
+                            </div>
+                            <div class="meme-metadata-section">
+                                <div class="meme-timestamp">Generated: ${formattedDate}</div>
+                                ${hasUrl ? '<div class="meme-url-hint">Click to view source article</div>' : ''}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
-        
-        card.innerHTML = memeCardHTML;
-        return card;
     }
 
     /**
