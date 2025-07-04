@@ -302,8 +302,6 @@ def get_random_templates(count: int = 50) -> List[Dict]:
                     "usage_context": template['usage_context'] or "",
                     "base_image_url": template['base_image_url'],
                     "categories": template['categories'] or [],
-                    "imgflip_id": template['imgflip_id'],
-                    "popularity_score": template['popularity_score']
                 }
                 for template in templates
             ]
