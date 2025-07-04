@@ -272,22 +272,12 @@ def get_random_templates(count: int = 50) -> List[Dict]:
             
             cur.execute("""
                 SELECT 
-                    id,
-                    name, 
-                    description, 
-                    usage_context,
-                    base_image_url,
-                    categories,
-                    imgflip_id,
+                    id, name, description, usage_context,
+                    base_image_url, categories, imgflip_id,
                     popularity_score
                 FROM templates
                 WHERE description IS NOT NULL
-                ORDER BY 
-                    CASE 
-                        WHEN popularity_score IS NOT NULL THEN popularity_score 
-                        ELSE 0 
-                    END DESC,
-                    RANDOM()
+                ORDER BY RANDOM()
                 LIMIT %s
             """, (count,))
             

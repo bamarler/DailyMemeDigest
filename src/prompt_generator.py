@@ -119,7 +119,7 @@ def get_article_meme_matches(articles: List[Dict], meme_templates: List[Dict]) -
         response = model.generate_content(
             system_prompt + "\n\n" + user_prompt,
             generation_config=genai.GenerationConfig(
-                temperature=0.7,
+                temperature=0.8,
                 response_mime_type="application/json"
             )
         )
@@ -208,7 +208,7 @@ def generate_prompts_from_matches(enriched_articles: List[Dict]) -> List[str]:
         response = model.generate_content(
             system_prompt + "\n\n" + user_prompt,
             generation_config=genai.GenerationConfig(
-                temperature=0.8,
+                temperature=1.0,
                 response_mime_type="application/json"
             )
         )
