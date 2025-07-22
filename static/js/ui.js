@@ -1,5 +1,5 @@
 /**
- * UI interactions for AI Meme Newsletter
+ * UI interactions for Daily Meme Digest
  * Handles all user interface logic for the main page
  */
 

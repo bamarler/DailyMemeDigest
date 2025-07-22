@@ -1,4 +1,4 @@
-# AI Meme Newsletter
+# Daily Meme Digest
 <p align="center">
   <a href="https://biztoc.com/x/4fe02456f08c6d1b">
     <img src="https://github.com/user-attachments/assets/b0e7959c-4afe-4c4e-a7ff-07d319285617" width="30%" />
@@ -9,7 +9,7 @@
   <img src="https://github.com/user-attachments/assets/193d82f5-aa13-4df5-9640-100b42911b99" width="30%" />
 </p>
 
-An AI-powered newsletter generator that makes staying informed fun and accessible. In today's fast-paced world, where attention spans are shrinking and information overload is common, young people often struggle to keep up with important news and developments. AI Meme Factory bridges this gap by transforming complex news articles into engaging memes, making it easier for everyone to stay informed about the latest trends and events.
+An AI-powered newsletter generator that makes staying informed fun and accessible. In today's fast-paced world, where attention spans are shrinking and information overload is common, young people often struggle to keep up with important news and developments. Daily Meme Digest bridges this gap by transforming complex news articles into engaging memes, making it easier for everyone to stay informed about the latest trends and events.
 
 Using cutting-edge AI technologies, the project generates memes that capture the essence of trending topics, helping users stay up-to-date with the state of the art in various fields. Choose between cloud mode (using OpenAI API) or local mode (using Stable Diffusion) for meme generation.
 

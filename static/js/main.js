@@ -1,5 +1,5 @@
 /**
- * Main application initialization for AI Meme Newsletter
+ * Main application initialization for Daily Meme Digest
  * Coordinates between UI and API components
  */
 
@@ -19,7 +19,7 @@ class MemeApp {
         }
 
         try {
-            console.log('🎭 AI Meme Newsletter v' + this.version + ' initializing...');
+            console.log('🎭 Daily Meme Digest v' + this.version + ' initializing...');
             
             // Check if dependencies are loaded
             this.checkDependencies();
@@ -37,7 +37,7 @@ class MemeApp {
             window.memeUI.initializeAnimations();
             
             this.isInitialized = true;
-            console.log('✅ AI Meme Newsletter initialized successfully');
+            console.log('✅ Daily Meme Digest initialized successfully');
             
         } catch (error) {
             console.error('❌ Failed to initialize app:', error);
@@ -125,7 +125,7 @@ class MemeApp {
         `;
         errorDiv.innerHTML = `
             <h3>⚠️ Application Error</h3>
-            <p>Failed to initialize the AI Meme Newsletter. Please refresh the page.</p>
+            <p>Failed to initialize the Daily Meme Digest. Please refresh the page.</p>
             <button onclick="window.location.reload()" style="
                 background: white;
                 color: #ff416c;
@@ -269,7 +269,7 @@ class MemeApp {
      */
     getInfo() {
         return {
-            name: 'AI Meme Newsletter',
+            name: 'Daily Meme Digest',
             version: this.version,
             initialized: this.isInitialized,
             dependencies: {
@@ -315,7 +315,7 @@ class MemeApp {
      * Cleanup resources (useful for SPA navigation)
      */
     destroy() {
-        console.log('🧹 Cleaning up AI Meme Newsletter...');
+        console.log('🧹 Cleaning up Daily Meme Digest...');
         
         // Remove event listeners
         // Clear timers/intervals
@@ -348,4 +348,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Expose app info to console for debugging
-console.log('🎭 AI Meme Newsletter loaded. Type memeApp.getInfo() for details.');
+console.log('🎭 Daily Meme Digest loaded. Type memeApp.getInfo() for details.');

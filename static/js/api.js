@@ -1,5 +1,5 @@
 /**
- * API handling for AI Meme Newsletter
+ * API handling for Daily Meme Digest
  * Handles all communication with Flask backend
  */
 

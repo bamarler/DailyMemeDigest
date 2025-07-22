@@ -1,5 +1,5 @@
 /**
- * History page functionality for AI Meme Newsletter
+ * History page functionality for Daily Meme Digest
  * Handles displaying and paginating previous meme generations
  */
 
