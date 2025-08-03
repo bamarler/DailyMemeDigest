@@ -1,15 +1,18 @@
 """
-Simplified Flask application for AI Meme Newsletter
-Uses DailyMemeDigest API for functionality
+Unified Flask application for AI Meme Newsletter
+Serves both API and React frontend
 """
 
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 import os
 import json
+import subprocess
+import sys
 from datetime import datetime
 from dotenv import load_dotenv
 import requests
+from pathlib import Path
 
 load_dotenv()
 
@@ -18,12 +21,12 @@ from mailchimp_marketing.api_client import ApiClientError
 
 def create_app():
     """
-    Create and configure the simplified Flask application
+    Create and configure the unified Flask application
     
     Returns:
-        Flask app instance configured for newsletter functionality
+        Flask app instance configured for newsletter functionality and frontend serving
     """
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='frontend/build', static_url_path='')
     
     # Configure CORS
     allowed_origins = os.getenv('ALLOWED_ORIGINS', '*').split(',')
@@ -32,6 +35,19 @@ def create_app():
     # DailyMemeDigest API configuration
     DAILYMEMEDIGEST_API_URL = os.getenv('DAILYMEMEDIGEST_API_URL', 'https://api.dailymemedigest.com')
     DAILYMEMEDIGEST_API_KEY = os.getenv('DAILYMEMEDIGEST_API_KEY')
+    
+    @app.route('/')
+    def index():
+        """Serve the React frontend"""
+        return send_from_directory('frontend/build', 'index.html')
+    
+    @app.route('/<path:path>')
+    def serve_static(path):
+        """Serve static files from the React build"""
+        if os.path.exists(os.path.join('frontend/build', path)):
+            return send_from_directory('frontend/build', path)
+        else:
+            return send_from_directory('frontend/build', 'index.html')
     
     @app.route('/api/v1/health')
     def health_check():
@@ -315,14 +331,71 @@ def create_app():
     
     return app
 
+def build_frontend():
+    """Build the React frontend if it doesn't exist or is outdated"""
+    frontend_dir = Path('frontend')
+    build_dir = frontend_dir / 'build'
+    
+    # Check if build directory exists and has content
+    if not build_dir.exists() or not any(build_dir.iterdir()):
+        print("🔨 Building React frontend...")
+        try:
+            # Store current directory
+            current_dir = os.getcwd()
+            
+            # Change to frontend directory
+            os.chdir(frontend_dir)
+            print(f"📁 Changed to directory: {os.getcwd()}")
+            
+            # Install dependencies if node_modules doesn't exist
+            if not Path('node_modules').exists():
+                print("📦 Installing dependencies...")
+                result = subprocess.run(['npm', 'install'], capture_output=True, text=True)
+                if result.returncode != 0:
+                    print(f"❌ npm install failed: {result.stderr}")
+                    os.chdir(current_dir)
+                    return False
+                print("✅ Dependencies installed")
+            
+            # Build the React app
+            print("🏗️  Building React app...")
+            result = subprocess.run(['npm', 'run', 'build'], capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"❌ npm run build failed: {result.stderr}")
+                os.chdir(current_dir)
+                return False
+            
+            # Change back to root directory
+            os.chdir(current_dir)
+            print(f"📁 Changed back to directory: {os.getcwd()}")
+            
+            print("✅ Frontend built successfully!")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to build frontend: {e}")
+            print(f"Error output: {e.stderr}")
+            return False
+        except Exception as e:
+            print(f"❌ Error building frontend: {e}")
+            return False
+    else:
+        print("✅ Frontend build already exists")
+        return True
+
 if __name__ == '__main__':
+    # Build frontend first
+    if not build_frontend():
+        print("❌ Failed to build frontend. Exiting.")
+        sys.exit(1)
+    
     app = create_app()
     
     print("\n" + "="*60)
-    print("AI Meme Newsletter API Server")
+    print("AI Meme Newsletter - Unified Server")
     print("="*60)
     
-    print("\nAPI Configuration:")
+    print("\nServer Configuration:")
     print(f"Version: 1.0.0")
     print(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
     print(f"CORS Origins: {os.getenv('ALLOWED_ORIGINS', '*')}")
@@ -332,14 +405,19 @@ if __name__ == '__main__':
     print(f"Mailchimp: {'✓' if os.getenv('MAILCHIMP_API_KEY') else '✗'}")
     
     print("\nEndpoints:")
-    print("  GET  /api/v1/health")
-    print("  GET  /api/v1/debug/mailchimp (no API key required)")
-    print("  GET  /api/v1/memes (no API key required)")
-    print("  POST /api/subscribe (no API key required)")
+    print("  GET  /                    - React Frontend")
+    print("  GET  /api/v1/health       - Health Check")
+    print("  GET  /api/v1/debug/mailchimp")
+    print("  GET  /api/v1/memes        - Get Memes")
+    print("  POST /api/subscribe       - Subscribe to Newsletter")
     
     print("\n" + "="*60 + "\n")
     
-    port = int(os.getenv('PORT', 8080))
+    port = int(os.getenv('PORT', 5001))
     debug = os.getenv('ENVIRONMENT', 'development') == 'development'
+    
+    print(f"🚀 Server starting on http://localhost:{port}")
+    print("📱 Frontend will be available at the same URL")
+    print("🔧 API endpoints available at /api/*")
     
     app.run(debug=debug, host='0.0.0.0', port=port)
