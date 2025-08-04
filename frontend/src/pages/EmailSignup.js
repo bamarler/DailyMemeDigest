@@ -480,7 +480,7 @@ const EmailSignup = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-6xl font-bold text-gray-900 mb-4">
               Daily Meme Digest
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
