@@ -4,23 +4,18 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /frontend
 
-# Debug: List what we're copying
-RUN echo "Current directory:" && pwd
-
-# Copy package files and debug
-COPY frontend/package.json ./
-COPY frontend/package-lock.json ./
-
-# Debug: Check if files were copied
-RUN echo "Files in frontend builder:" && ls -la && \
-    echo "package.json content:" && head -n 5 package.json && \
-    echo "package-lock.json exists:" && test -f package-lock.json && echo "yes" || echo "no"
+# Copy package files first for better caching
+COPY frontend/package.json frontend/package-lock.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --only=production
 
 # Copy all frontend source code
 COPY frontend/ ./
+
+# Set environment variables for build
+ENV REACT_APP_API_BASE_URL=
+ENV NODE_ENV=production
 
 # Build the React app
 RUN npm run build
@@ -46,8 +41,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install gunicorn for production
 RUN pip install gunicorn
 
-# Copy application code
-COPY . .
+# Copy application code (excluding frontend/node_modules and build)
+COPY app.py .
+COPY .env .
 
 # Copy built frontend from the frontend-builder stage
 COPY --from=frontend-builder /frontend/build ./frontend/build
@@ -60,10 +56,14 @@ USER appuser
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=app.py
 ENV ENVIRONMENT=production
+ENV PORT=8080
 
-# Expose port (documentation only)
+# Expose port
 EXPOSE 8080
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:$PORT/health || exit 1
+
 # Run the Flask app with gunicorn
-# Cloud Run will set PORT environment variable
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 300 "app:app"
