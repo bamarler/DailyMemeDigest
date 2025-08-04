@@ -4,11 +4,11 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /frontend
 
-# Copy frontend package files
-COPY frontend/package*.json ./
+# Copy frontend package files explicitly
+COPY frontend/package.json frontend/package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies with ci for faster, reproducible builds
+RUN npm ci
 
 # Copy frontend source code
 COPY frontend/ ./
