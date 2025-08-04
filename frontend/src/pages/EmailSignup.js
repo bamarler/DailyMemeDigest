@@ -4,7 +4,7 @@ import { RotateCcw } from 'lucide-react';
 import axios from 'axios';
 
 // Get API configuration from environment variables
-const API_URL = process.env.REACT_APP_API_BASE_URL || '/api/v1';
+const API_URL = process.env.REACT_APP_API_BASE_URL || '';
 const API_KEY = process.env.REACT_APP_NEWSLETTER_API_KEY;
 console.log('API_URL:', API_URL);
 console.log('API_KEY:', API_KEY ? 'Set' : 'Not set');
@@ -128,11 +128,7 @@ const MemeGallery = () => {
     
     try {
       console.log('📡 Making API request...');
-      const response = await axios.get(apiUrl, {
-        headers: {
-          'X-API-Key': API_KEY
-        }
-      });
+      const response = await axios.get(apiUrl);
       console.log('📊 Response status:', response.status);
       console.log('📄 Response data:', response.data);
       

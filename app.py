@@ -3,7 +3,7 @@ Unified Flask application for AI Meme Newsletter
 Serves both API and React frontend
 """
 
-from flask import Flask, request, jsonify, Response, send_from_directory
+from flask import Flask, request, jsonify, Response, send_from_directory, render_template
 from flask_cors import CORS
 import os
 import json
@@ -49,7 +49,7 @@ def create_app():
         else:
             return send_from_directory('frontend/build', 'index.html')
     
-    @app.route('/api/v1/health')
+    @app.route('/health')
     def health_check():
         """
         Health check endpoint for monitoring
@@ -64,7 +64,7 @@ def create_app():
             'timestamp': datetime.now().isoformat()
         })
     
-    @app.route('/api/v1/debug/mailchimp')
+    @app.route('/debug/mailchimp')
     def debug_mailchimp():
         """
         Debug endpoint to check Mailchimp configuration (no sensitive data)
@@ -104,7 +104,7 @@ def create_app():
             'connection_test': connection_test
         })
     
-    @app.route('/api/v1/memes', methods=['GET'])
+    @app.route('/memes', methods=['GET'])
     def get_memes():
         """
         Get memes from DailyMemeDigest API
@@ -131,7 +131,7 @@ def create_app():
             # Call DailyMemeDigest API
             headers = {}
             if DAILYMEMEDIGEST_API_KEY:
-                headers['Authorization'] = f'Bearer {DAILYMEMEDIGEST_API_KEY}'
+                headers['X-API-Key'] = DAILYMEMEDIGEST_API_KEY
             
             params = {
                 'limit': limit,
@@ -139,7 +139,7 @@ def create_app():
             }
             
             response = requests.get(
-                f"{DAILYMEMEDIGEST_API_URL}/api/v1/memes",
+                f"{DAILYMEMEDIGEST_API_URL}/memes",
                 headers=headers,
                 params=params,
                 timeout=30
@@ -382,6 +382,8 @@ def build_frontend():
     else:
         print("✅ Frontend build already exists")
         return True
+        
+app = create_app()
 
 if __name__ == '__main__':
     # Build frontend first
@@ -389,7 +391,7 @@ if __name__ == '__main__':
         print("❌ Failed to build frontend. Exiting.")
         sys.exit(1)
     
-    app = create_app()
+    
     
     print("\n" + "="*60)
     print("AI Meme Newsletter - Unified Server")
@@ -406,9 +408,9 @@ if __name__ == '__main__':
     
     print("\nEndpoints:")
     print("  GET  /                    - React Frontend")
-    print("  GET  /api/v1/health       - Health Check")
-    print("  GET  /api/v1/debug/mailchimp")
-    print("  GET  /api/v1/memes        - Get Memes")
+    print("  GET  /health       - Health Check")
+    print("  GET  /debug/mailchimp")
+    print("  GET  /memes        - Get Memes")
     print("  POST /api/subscribe       - Subscribe to Newsletter")
     
     print("\n" + "="*60 + "\n")
@@ -420,4 +422,8 @@ if __name__ == '__main__':
     print("📱 Frontend will be available at the same URL")
     print("🔧 API endpoints available at /api/*")
     
-    app.run(debug=debug, host='0.0.0.0', port=port)
+    try:
+        app.run(debug=debug, host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"❌ Server failed to start: {e}")
+        sys.exit(1)

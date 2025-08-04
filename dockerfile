@@ -1,9 +1,28 @@
+# Multi-stage build for efficiency
+# Stage 1: Build React frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy frontend source code
+COPY frontend/ ./
+
+# Build the React app
+RUN npm run build
+
+# Stage 2: Python runtime with built frontend
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -21,6 +40,9 @@ RUN pip install gunicorn
 # Copy application code
 COPY . .
 
+# Copy built frontend from the frontend-builder stage
+COPY --from=frontend-builder /frontend/build ./frontend/build
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
@@ -33,14 +55,6 @@ ENV ENVIRONMENT=production
 # Expose port (documentation only)
 EXPOSE 8080
 
-# Health check for Cloud Run
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:$PORT/api/v1/health || exit 1
-
 # Run the Flask app with gunicorn
 # Cloud Run will set PORT environment variable
-# Note: create_app() returns the app instance
-# --timeout 300: Allow 5 minutes for long-running meme generation
-# --workers 1: Use single worker for SSE support
-# --threads 8: Handle multiple concurrent requests
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 300 "app:app"
