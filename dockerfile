@@ -4,13 +4,22 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /frontend
 
-# Copy frontend package files explicitly
-COPY frontend/package.json frontend/package-lock.json ./
+# Debug: List what we're copying
+RUN echo "Current directory:" && pwd
 
-# Install dependencies with ci for faster, reproducible builds
-RUN npm ci
+# Copy package files and debug
+COPY frontend/package.json ./
+COPY frontend/package-lock.json ./
 
-# Copy frontend source code
+# Debug: Check if files were copied
+RUN echo "Files in frontend builder:" && ls -la && \
+    echo "package.json content:" && head -n 5 package.json && \
+    echo "package-lock.json exists:" && test -f package-lock.json && echo "yes" || echo "no"
+
+# Install dependencies
+RUN npm install
+
+# Copy all frontend source code
 COPY frontend/ ./
 
 # Build the React app

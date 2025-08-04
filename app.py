@@ -386,10 +386,11 @@ def build_frontend():
 app = create_app()
 
 if __name__ == '__main__':
-    # Build frontend first
-    if not build_frontend():
-        print("❌ Failed to build frontend. Exiting.")
-        sys.exit(1)
+    # Only build frontend in development
+    if os.getenv('ENVIRONMENT', 'development') == 'development':
+        if not build_frontend():
+            print("❌ Failed to build frontend. Exiting.")
+            sys.exit(1)
     
     
     
