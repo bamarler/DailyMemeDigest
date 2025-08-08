@@ -64,43 +64,43 @@ def create_app():
             'timestamp': datetime.now().isoformat()
         })
     
-    @app.route('/debug/mailchimp')
-    def debug_mailchimp():
+    @app.route('/debug/mailerlite')
+    def debug_mailerlite():
         """
-        Debug endpoint to check Mailchimp configuration (no sensitive data)
+        Debug endpoint to check MailerLite configuration (no sensitive data)
         
         Returns:
             JSON response with configuration status
         """
-        mailchimp_api_key = os.getenv('MAILCHIMP_API_KEY')
-        mailchimp_server_prefix = os.getenv('MAILCHIMP_SERVER_PREFIX')
-        mailchimp_list_id = os.getenv('MAILCHIMP_LIST_ID')
+        mailerlite_api_key = os.getenv('MAILERLITE_API_KEY')
+        mailerlite_group_id = os.getenv('MAILERLITE_GROUP_ID')
         
-        # Test Mailchimp connection
+        # Test MailerLite connection
         connection_test = "Not tested"
         try:
-            if all([mailchimp_api_key, mailchimp_server_prefix, mailchimp_list_id]):
-                mailchimp = Client()
-                mailchimp.set_config({
-                    "api_key": mailchimp_api_key,
-                    "server": mailchimp_server_prefix
-                })
+            if all([mailerlite_api_key, mailerlite_group_id]):
+                headers = {
+                    'Authorization': f'Bearer {mailerlite_api_key}',
+                    'Content-Type': 'application/json'
+                }
                 
-                # Test by getting list info
-                list_info = mailchimp.lists.get_list(list_id=mailchimp_list_id)
-                connection_test = f"✅ Connected - List: {list_info.get('name', 'Unknown')}"
+                # Test by getting account info
+                response = requests.get('https://connect.mailerlite.com/api/account', headers=headers)
+                if response.status_code == 200:
+                    account_info = response.json()
+                    connection_test = f"✅ Connected - Account: {account_info.get('data', {}).get('name', 'Unknown')}"
+                else:
+                    connection_test = f"❌ Connection failed: {response.status_code}"
             else:
                 connection_test = "❌ Missing configuration"
         except Exception as e:
             connection_test = f"❌ Connection failed: {str(e)}"
         
         return jsonify({
-            'mailchimp_configured': bool(all([mailchimp_api_key, mailchimp_server_prefix, mailchimp_list_id])),
-            'api_key_set': bool(mailchimp_api_key),
-            'server_prefix_set': bool(mailchimp_server_prefix),
-            'list_id_set': bool(mailchimp_list_id),
-            'server_prefix': mailchimp_server_prefix if mailchimp_server_prefix else None,
-            'list_id': mailchimp_list_id if mailchimp_list_id else None,
+            'mailerlite_configured': bool(all([mailerlite_api_key, mailerlite_group_id])),
+            'api_key_set': bool(mailerlite_api_key),
+            'group_id_set': bool(mailerlite_group_id),
+            'group_id': mailerlite_group_id if mailerlite_group_id else None,
             'connection_test': connection_test
         })
     
@@ -169,7 +169,7 @@ def create_app():
     @app.route('/api/subscribe', methods=['POST'])
     def subscribe():
         """
-        Subscribe email to newsletter via Mailchimp (no API key required)
+        Subscribe email to newsletter via MailerLite
         
         Returns:
             JSON response with subscription status
@@ -194,116 +194,137 @@ def create_app():
                     'error': 'Invalid email format'
                 }), 400
             
-            # Get Mailchimp configuration from environment with debugging
-            mailchimp_api_key = os.getenv('MAILCHIMP_API_KEY')
-            mailchimp_server_prefix = os.getenv('MAILCHIMP_SERVER_PREFIX')
-            mailchimp_list_id = os.getenv('MAILCHIMP_LIST_ID')
+            # Get MailerLite configuration from environment with debugging
+            mailerlite_api_key = os.getenv('MAILERLITE_API_KEY')
+            mailerlite_group_id = os.getenv('MAILERLITE_GROUP_ID')
             
-            # Debug logging for Mailchimp configuration
-            app.logger.info("=== Mailchimp Configuration Debug ===")
-            app.logger.info(f"MAILCHIMP_API_KEY: {'✓ Set' if mailchimp_api_key else '✗ Missing'}")
-            app.logger.info(f"MAILCHIMP_SERVER_PREFIX: {'✓ Set' if mailchimp_server_prefix else '✗ Missing'}")
-            app.logger.info(f"MAILCHIMP_LIST_ID: {'✓ Set' if mailchimp_list_id else '✗ Missing'}")
+            # Debug logging for MailerLite configuration
+            app.logger.info("=== MailerLite Configuration Debug ===")
+            app.logger.info(f"MAILERLITE_API_KEY: {'✓ Set' if mailerlite_api_key else '✗ Missing'}")
+            app.logger.info(f"MAILERLITE_GROUP_ID: {'✓ Set' if mailerlite_group_id else '✗ Missing'}")
             
-            if mailchimp_api_key:
-                app.logger.info(f"API Key starts with: {mailchimp_api_key[:10]}...")
-            if mailchimp_server_prefix:
-                app.logger.info(f"Server prefix: {mailchimp_server_prefix}")
-            if mailchimp_list_id:
-                app.logger.info(f"List ID: {mailchimp_list_id}")
+            if mailerlite_api_key:
+                app.logger.info(f"API Key starts with: {mailerlite_api_key[:10]}...")
+            if mailerlite_group_id:
+                app.logger.info(f"Group ID: {mailerlite_group_id}")
             
-            if not all([mailchimp_api_key, mailchimp_server_prefix, mailchimp_list_id]):
+            if not all([mailerlite_api_key, mailerlite_group_id]):
                 missing_vars = []
-                if not mailchimp_api_key:
-                    missing_vars.append("MAILCHIMP_API_KEY")
-                if not mailchimp_server_prefix:
-                    missing_vars.append("MAILCHIMP_SERVER_PREFIX")
-                if not mailchimp_list_id:
-                    missing_vars.append("MAILCHIMP_LIST_ID")
+                if not mailerlite_api_key:
+                    missing_vars.append("MAILERLITE_API_KEY")
+                if not mailerlite_group_id:
+                    missing_vars.append("MAILERLITE_GROUP_ID")
                 
-                app.logger.error(f"Mailchimp configuration missing: {', '.join(missing_vars)}")
+                app.logger.error(f"MailerLite configuration missing: {', '.join(missing_vars)}")
                 return jsonify({
                     'success': False,
                     'error': f'Newsletter service not configured. Missing: {", ".join(missing_vars)}'
                 }), 500
             
-            # Initialize Mailchimp client
-            mailchimp = Client()
-            mailchimp.set_config({
-                "api_key": mailchimp_api_key,
-                "server": mailchimp_server_prefix
-            })
+            # Set up MailerLite API headers
+            headers = {
+                'Authorization': f'Bearer {mailerlite_api_key}',
+                'Content-Type': 'application/json'
+            }
             
-            # Add subscriber to Mailchimp list
+            # Add subscriber to MailerLite group
             try:
                 # Check if subscriber already exists
                 try:
-                    subscriber_hash = mailchimp.lists.get_list_member(
-                        list_id=mailchimp_list_id,
-                        subscriber_hash=email
+                    response = requests.get(
+                        f'https://connect.mailerlite.com/api/subscribers/{email}',
+                        headers=headers
                     )
-                    # Subscriber already exists
-                    app.logger.info(f"Subscriber already exists: {email}")
-                    return jsonify({
-                        'success': True,
-                        'message': 'You are already subscribed to our newsletter!'
-                    })
-                except ApiClientError as e:
-                    if e.status_code == 404:
-                        # Subscriber doesn't exist, add them
-                        pass
+                    
+                    if response.status_code == 200:
+                        # Subscriber already exists, check if they're in the group
+                        subscriber_data = response.json()
+                        app.logger.info(f"Subscriber already exists: {email}")
+                        
+                        # Check if subscriber is in our group
+                        group_response = requests.get(
+                            f'https://connect.mailerlite.com/api/groups/{mailerlite_group_id}/subscribers/{email}',
+                            headers=headers
+                        )
+                        
+                        if group_response.status_code == 200:
+                            return jsonify({
+                                'success': True,
+                                'message': 'You are already subscribed to our newsletter!'
+                            })
+                        else:
+                            # Subscriber exists but not in group, add them
+                            app.logger.info(f"Subscriber exists but not in group, adding to group: {email}")
+                    elif response.status_code == 404:
+                        # Subscriber doesn't exist, create them
+                        app.logger.info(f"Subscriber doesn't exist, creating: {email}")
                     else:
-                        raise e
+                        app.logger.error(f"Unexpected response checking subscriber: {response.status_code}")
+                        raise Exception(f"Failed to check subscriber: {response.status_code}")
+                        
+                except requests.exceptions.RequestException as e:
+                    app.logger.error(f"Request error checking subscriber: {str(e)}")
+                    raise e
                 
-                # Add new subscriber
+                # Add new subscriber to group
                 subscriber_data = {
-                    "email_address": email,
-                    "status": "subscribed",
-                    "merge_fields": {
-                        "FNAME": email.split('@')[0]  # Use part before @ as first name
+                    "email": email,
+                    "status": "active",
+                    "groups": [mailerlite_group_id],
+                    "fields": {
+                        "name": email.split('@')[0]  # Use part before @ as first name
                     }
                 }
                 
                 app.logger.info(f"Attempting to add subscriber with data: {subscriber_data}")
                 
-                result = mailchimp.lists.add_list_member(
-                    list_id=mailchimp_list_id,
-                    body=subscriber_data
+                # Create or update subscriber
+                response = requests.post(
+                    'https://connect.mailerlite.com/api/subscribers',
+                    headers=headers,
+                    json=subscriber_data
                 )
                 
-                app.logger.info(f"Mailchimp API response: {result}")
-                app.logger.info(f"Successfully added subscriber: {email}")
-                return jsonify({
-                    'success': True,
-                    'message': 'Successfully subscribed to newsletter!'
-                })
-                
-            except ApiClientError as e:
-                app.logger.error(f"Mailchimp API error: Status {e.status_code}, Response: {e.text}")
-                if e.status_code == 400:
-                    app.logger.error(f"Bad request error: {e.text}")
+                if response.status_code in [200, 201]:  # Both 200 and 201 indicate success
+                    result = response.json()
+                    app.logger.info(f"MailerLite API response: {result}")
+                    app.logger.info(f"Successfully added subscriber: {email}")
                     return jsonify({
-                        'success': False,
-                        'error': 'Invalid email address or already subscribed'
-                    }), 400
-                elif e.status_code == 401:
-                    app.logger.error("Mailchimp authentication failed - check API key")
-                    return jsonify({
-                        'success': False,
-                        'error': 'Newsletter service authentication failed'
-                    }), 500
-                elif e.status_code == 404:
-                    app.logger.error("Mailchimp list not found - check LIST_ID")
-                    return jsonify({
-                        'success': False,
-                        'error': 'Newsletter list not found'
-                    }), 500
+                        'success': True,
+                        'message': 'Successfully subscribed to newsletter!'
+                    })
                 else:
-                    app.logger.error(f"Unexpected Mailchimp error: {e.status_code} - {e.text}")
-                    return jsonify({
-                        'success': False,
-                        'error': 'Failed to subscribe. Please try again later.'
-                    }), 500
+                    app.logger.error(f"MailerLite API error: Status {response.status_code}, Response: {response.text}")
+                    if response.status_code == 400:
+                        return jsonify({
+                            'success': False,
+                            'error': 'Invalid email address or already subscribed'
+                        }), 400
+                    elif response.status_code == 401:
+                        app.logger.error("MailerLite authentication failed - check API key")
+                        return jsonify({
+                            'success': False,
+                            'error': 'Newsletter service authentication failed'
+                        }), 500
+                    elif response.status_code == 404:
+                        app.logger.error("MailerLite group not found - check GROUP_ID")
+                        return jsonify({
+                            'success': False,
+                            'error': 'Newsletter group not found'
+                        }), 500
+                    else:
+                        app.logger.error(f"Unexpected MailerLite error: {response.status_code} - {response.text}")
+                        return jsonify({
+                            'success': False,
+                            'error': 'Failed to subscribe. Please try again later.'
+                        }), 500
+                
+            except requests.exceptions.RequestException as e:
+                app.logger.error(f"Request error in subscription: {str(e)}")
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to subscribe. Please try again later.'
+                }), 500
             
         except Exception as e:
             app.logger.error(f"Error in subscription: {str(e)}")
@@ -405,13 +426,13 @@ if __name__ == '__main__':
     
     print("\nExternal Services:")
     print(f"DailyMemeDigest API: {'✓' if os.getenv('DAILYMEMEDIGEST_API_KEY') else '✗'}")
-    print(f"Mailchimp: {'✓' if os.getenv('MAILCHIMP_API_KEY') else '✗'}")
+    print(f"MailerLite: {'✓' if os.getenv('MAILERLITE_API_KEY') else '✗'}")
     
     print("\nEndpoints:")
     print("  GET  /                    - React Frontend")
-    print("  GET  /health       - Health Check")
-    print("  GET  /debug/mailchimp")
-    print("  GET  /memes        - Get Memes")
+    print("  GET  /health              - Health Check")
+    print("  GET  /debug/mailerlite    - MailerLite Configuration Debug")
+    print("  GET  /memes               - Get Memes")
     print("  POST /api/subscribe       - Subscribe to Newsletter")
     
     print("\n" + "="*60 + "\n")
