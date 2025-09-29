@@ -48,7 +48,7 @@ const ThankYou = () => {
             </div>
             
             <div className="mt-4 text-xs text-gray-500">
-              You'll receive your first AI Meme Newsletter via MailerLite soon!
+              You'll receive your first AI Meme Newsletter via Brevo soon!
             </div>
           </div>
         </div>

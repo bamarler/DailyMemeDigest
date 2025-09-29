@@ -61,7 +61,7 @@ const ConfirmationSent = () => {
             
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Your first newsletter will arrive soon!</strong> Keep an eye on your inbox for the latest AI memes delivered via MailerLite.
+                <strong>Your first newsletter will arrive soon!</strong> Keep an eye on your inbox for the latest AI memes delivered via Brevo.
               </p>
             </div>
           </div>

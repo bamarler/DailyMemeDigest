@@ -64,31 +64,31 @@ def create_app():
             'timestamp': datetime.now().isoformat()
         })
     
-    @app.route('/debug/mailerlite')
-    def debug_mailerlite():
+    @app.route('/debug/brevo')
+    def debug_brevo():
         """
-        Debug endpoint to check MailerLite configuration (no sensitive data)
+        Debug endpoint to check Brevo configuration (no sensitive data)
         
         Returns:
             JSON response with configuration status
         """
-        mailerlite_api_key = os.getenv('MAILERLITE_API_KEY')
-        mailerlite_group_id = os.getenv('MAILERLITE_GROUP_ID')
+        brevo_api_key = os.getenv('BREVO_API_KEY')
+        brevo_list_id = os.getenv('BREVO_LIST_ID')
         
-        # Test MailerLite connection
+        # Test Brevo connection
         connection_test = "Not tested"
         try:
-            if all([mailerlite_api_key, mailerlite_group_id]):
+            if all([brevo_api_key, brevo_list_id]):
                 headers = {
-                    'Authorization': f'Bearer {mailerlite_api_key}',
+                    'api-key': brevo_api_key,
                     'Content-Type': 'application/json'
                 }
                 
                 # Test by getting account info
-                response = requests.get('https://connect.mailerlite.com/api/account', headers=headers)
+                response = requests.get('https://api.brevo.com/v3/account', headers=headers)
                 if response.status_code == 200:
                     account_info = response.json()
-                    connection_test = f"✅ Connected - Account: {account_info.get('data', {}).get('name', 'Unknown')}"
+                    connection_test = f"✅ Connected - Account: {account_info.get('email', 'Unknown')}"
                 else:
                     connection_test = f"❌ Connection failed: {response.status_code}"
             else:
@@ -97,10 +97,10 @@ def create_app():
             connection_test = f"❌ Connection failed: {str(e)}"
         
         return jsonify({
-            'mailerlite_configured': bool(all([mailerlite_api_key, mailerlite_group_id])),
-            'api_key_set': bool(mailerlite_api_key),
-            'group_id_set': bool(mailerlite_group_id),
-            'group_id': mailerlite_group_id if mailerlite_group_id else None,
+            'brevo_configured': bool(all([brevo_api_key, brevo_list_id])),
+            'api_key_set': bool(brevo_api_key),
+            'list_id_set': bool(brevo_list_id),
+            'list_id': brevo_list_id if brevo_list_id else None,
             'connection_test': connection_test
         })
     
@@ -169,7 +169,7 @@ def create_app():
     @app.route('/api/subscribe', methods=['POST'])
     def subscribe():
         """
-        Subscribe email to newsletter via MailerLite
+        Subscribe email to newsletter via Brevo
         
         Returns:
             JSON response with subscription status
@@ -194,126 +194,88 @@ def create_app():
                     'error': 'Invalid email format'
                 }), 400
             
-            # Get MailerLite configuration from environment with debugging
-            mailerlite_api_key = os.getenv('MAILERLITE_API_KEY')
-            mailerlite_group_id = os.getenv('MAILERLITE_GROUP_ID')
+            # Get Brevo configuration from environment with debugging
+            brevo_api_key = os.getenv('BREVO_API_KEY')
+            brevo_list_id = os.getenv('BREVO_LIST_ID')
             
-            # Debug logging for MailerLite configuration
-            app.logger.info("=== MailerLite Configuration Debug ===")
-            app.logger.info(f"MAILERLITE_API_KEY: {'✓ Set' if mailerlite_api_key else '✗ Missing'}")
-            app.logger.info(f"MAILERLITE_GROUP_ID: {'✓ Set' if mailerlite_group_id else '✗ Missing'}")
+            # Debug logging for Brevo configuration
+            app.logger.info("=== Brevo Configuration Debug ===")
+            app.logger.info(f"BREVO_API_KEY: {'✓ Set' if brevo_api_key else '✗ Missing'}")
+            app.logger.info(f"BREVO_LIST_ID: {'✓ Set' if brevo_list_id else '✗ Missing'}")
             
-            if mailerlite_api_key:
-                app.logger.info(f"API Key starts with: {mailerlite_api_key[:10]}...")
-            if mailerlite_group_id:
-                app.logger.info(f"Group ID: {mailerlite_group_id}")
+            if brevo_api_key:
+                app.logger.info(f"API Key starts with: {brevo_api_key[:10]}...")
+            if brevo_list_id:
+                app.logger.info(f"List ID: {brevo_list_id}")
             
-            if not all([mailerlite_api_key, mailerlite_group_id]):
+            if not all([brevo_api_key, brevo_list_id]):
                 missing_vars = []
-                if not mailerlite_api_key:
-                    missing_vars.append("MAILERLITE_API_KEY")
-                if not mailerlite_group_id:
-                    missing_vars.append("MAILERLITE_GROUP_ID")
+                if not brevo_api_key:
+                    missing_vars.append("BREVO_API_KEY")
+                if not brevo_list_id:
+                    missing_vars.append("BREVO_LIST_ID")
                 
-                app.logger.error(f"MailerLite configuration missing: {', '.join(missing_vars)}")
+                app.logger.error(f"Brevo configuration missing: {', '.join(missing_vars)}")
                 return jsonify({
                     'success': False,
                     'error': f'Newsletter service not configured. Missing: {", ".join(missing_vars)}'
                 }), 500
             
-            # Set up MailerLite API headers
+            # Set up Brevo API headers
             headers = {
-                'Authorization': f'Bearer {mailerlite_api_key}',
+                'api-key': brevo_api_key,
                 'Content-Type': 'application/json'
             }
             
-            # Add subscriber to MailerLite group
+            # Add subscriber to Brevo list
             try:
-                # Check if subscriber already exists
-                try:
-                    response = requests.get(
-                        f'https://connect.mailerlite.com/api/subscribers/{email}',
-                        headers=headers
-                    )
-                    
-                    if response.status_code == 200:
-                        # Subscriber already exists, check if they're in the group
-                        subscriber_data = response.json()
-                        app.logger.info(f"Subscriber already exists: {email}")
-                        
-                        # Check if subscriber is in our group
-                        group_response = requests.get(
-                            f'https://connect.mailerlite.com/api/groups/{mailerlite_group_id}/subscribers/{email}',
-                            headers=headers
-                        )
-                        
-                        if group_response.status_code == 200:
-                            return jsonify({
-                                'success': True,
-                                'message': 'You are already subscribed to our newsletter!'
-                            })
-                        else:
-                            # Subscriber exists but not in group, add them
-                            app.logger.info(f"Subscriber exists but not in group, adding to group: {email}")
-                    elif response.status_code == 404:
-                        # Subscriber doesn't exist, create them
-                        app.logger.info(f"Subscriber doesn't exist, creating: {email}")
-                    else:
-                        app.logger.error(f"Unexpected response checking subscriber: {response.status_code}")
-                        raise Exception(f"Failed to check subscriber: {response.status_code}")
-                        
-                except requests.exceptions.RequestException as e:
-                    app.logger.error(f"Request error checking subscriber: {str(e)}")
-                    raise e
-                
-                # Add new subscriber to group
+                # Create subscriber data for Brevo
                 subscriber_data = {
                     "email": email,
-                    "status": "active",
-                    "groups": [mailerlite_group_id],
-                    "fields": {
-                        "name": email.split('@')[0]  # Use part before @ as first name
+                    "listIds": [int(brevo_list_id)],
+                    "attributes": {
+                        "FIRSTNAME": email.split('@')[0]  # Use part before @ as first name
                     }
                 }
                 
                 app.logger.info(f"Attempting to add subscriber with data: {subscriber_data}")
                 
-                # Create or update subscriber
+                # Create or update subscriber in Brevo
                 response = requests.post(
-                    'https://connect.mailerlite.com/api/subscribers',
+                    'https://api.brevo.com/v3/contacts',
                     headers=headers,
                     json=subscriber_data
                 )
                 
                 if response.status_code in [200, 201]:  # Both 200 and 201 indicate success
                     result = response.json()
-                    app.logger.info(f"MailerLite API response: {result}")
+                    app.logger.info(f"Brevo API response: {result}")
                     app.logger.info(f"Successfully added subscriber: {email}")
                     return jsonify({
                         'success': True,
                         'message': 'Successfully subscribed to newsletter!'
                     })
                 else:
-                    app.logger.error(f"MailerLite API error: Status {response.status_code}, Response: {response.text}")
+                    app.logger.error(f"Brevo API error: Status {response.status_code}, Response: {response.text}")
                     if response.status_code == 400:
                         return jsonify({
                             'success': False,
                             'error': 'Invalid email address or already subscribed'
                         }), 400
                     elif response.status_code == 401:
-                        app.logger.error("MailerLite authentication failed - check API key")
+                        app.logger.error("Brevo authentication failed - check API key")
                         return jsonify({
                             'success': False,
                             'error': 'Newsletter service authentication failed'
                         }), 500
                     elif response.status_code == 404:
-                        app.logger.error("MailerLite group not found - check GROUP_ID")
+                        app.logger.error("Brevo list not found - check LIST_ID")
                         return jsonify({
                             'success': False,
-                            'error': 'Newsletter group not found'
+                            'error': 'Newsletter list not found'
                         }), 500
                     else:
-                        app.logger.error(f"Unexpected MailerLite error: {response.status_code} - {response.text}")
+                        app.logger.error(f"Unexpected Brevo error: {response.status_code} - {response.text}")
                         return jsonify({
                             'success': False,
                             'error': 'Failed to subscribe. Please try again later.'

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "DailyMemeDigest",
+			"path": "."
+		},
+		{
+			"name": "frontend",
+			"path": "../../AIMemeNewsletterAPI/memenewsletter-api/frontend"
+		}
+	],
+	"settings": {}
+}

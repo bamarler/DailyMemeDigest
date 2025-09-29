@@ -444,7 +444,7 @@ const EmailSignup = () => {
     try {
       console.log('🔍 Attempting to subscribe email:', email);
       
-      // Add email to MailerLite group
+      // Add email to Brevo list
       const response = await axios.post('/api/subscribe', {
         email: email
       });
